@@ -1,0 +1,315 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Prestamos Pro - Sistema de Gestión SaaS</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+    <style>
+        :root {
+            --bg: #0d1117; --card: #161b22; --accent: #58a6ff;
+            --neon: #39d353; --border: #30363d; --text: #c9d1d9; --danger: #f85149;
+        }
+        body { font-family: 'Segoe UI', sans-serif; background: var(--bg); color: var(--text); padding: 10px; margin: 0; }
+        .container { max-width: 1000px; margin: auto; padding: 10px; }
+        
+        /* Login Overlay */
+        #login-screen { position:fixed; top:0; left:0; width:100%; height:100%; background:var(--bg); z-index:2000; display:flex; justify-content:center; align-items:center; }
+        
+        /* Cards y Layout */
+        .card { background: var(--card); border: 1px solid var(--border); padding: 20px; border-radius: 12px; margin-bottom: 20px; box-shadow: 0 4px 10px rgba(0,0,0,0.3); }
+        .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 15px; margin-bottom: 20px; }
+        .stat-card { background: var(--card); border: 1px solid var(--border); padding: 15px; border-radius: 10px; text-align: center; }
+        .stat-card h3 { margin: 0; font-size: 0.75rem; color: var(--accent); text-transform: uppercase; }
+        .stat-card p { margin: 5px 0; font-size: 1.2rem; font-weight: bold; color: var(--neon); }
+        
+        .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 10px; }
+        input, select { padding: 12px; background: #0d1117; border: 1px solid var(--border); border-radius: 8px; color: white; width: 100%; box-sizing: border-box; }
+        button { padding: 12px; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; transition: 0.3s; }
+        .btn-main { background: var(--neon); color: #0d1117; width: 100%; margin-top: 10px; }
+        
+        /* Tablas */
+        table { width: 100%; border-collapse: collapse; margin-top: 15px; font-size: 0.9rem; }
+        th, td { padding: 12px; border-bottom: 1px solid var(--border); text-align: left; }
+        th { color: var(--accent); }
+        
+        /* Modales */
+        .modal { display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 95%; max-width: 650px; background: var(--card); border: 1px solid var(--accent); z-index: 100; padding: 20px; border-radius: 15px; box-shadow: 0 0 30px rgba(0,0,0,0.8); }
+        .overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 50; }
+        
+        #recibo-template { display: none; background: white; color: black; padding: 40px; width: 500px; font-family: Arial; }
+        .btn-ws { background: #25d366; color: white; text-decoration: none; padding: 6px 10px; border-radius: 5px; font-size: 0.8rem; display: inline-block; }
+    </style>
+</head>
+<body>
+
+<div id="login-screen">
+    <div class="card" style="width:320px; text-align:center;">
+        <h2 style="color:var(--accent)">SISTEMA DE PRÉSTAMOS</h2>
+        <p style="font-size:0.8rem;">Introduce tu llave de suscriptor</p>
+        <input type="password" id="pass-key" placeholder="Contraseña">
+        <button onclick="validarAcceso()" class="btn-main">ENTRAR</button>
+        <p id="login-error" style="color:var(--danger); font-size:0.8rem; margin-top:10px; display:none;"></p>
+    </div>
+</div>
+
+<div class="container">
+    <div style="display: flex; justify-content: space-between; margin-bottom: 15px;">
+        <h2 style="margin:0; color:var(--accent);">Dashboard</h2>
+        <div>
+            <button onclick="exportarDatos()" style="background:#30363d; color:white; font-size:0.7rem;">📥 BACKUP</button>
+            <button onclick="document.getElementById('fileInput').click()" style="background:#30363d; color:white; font-size:0.7rem;">📤 IMPORTAR</button>
+            <input type="file" id="fileInput" style="display:none" onchange="importarDatos(event)">
+        </div>
+    </div>
+
+    <div class="stats-grid">
+        <div class="stat-card"><h3>Capital Prestado</h3><p id="stat-prestado">$0</p></div>
+        <div class="stat-card"><h3>Total Cobrado</h3><p id="stat-cobrado">$0</p></div>
+        <div class="stat-card"><h3>Utilidad Neta</h3><p id="stat-utilidad">$0</p></div>
+    </div>
+
+    <div class="grid">
+        <div class="card">
+            <h3>Nuevo Préstamo</h3>
+            <form id="loanForm">
+                <input type="text" id="nombre" placeholder="Nombre Cliente" required style="margin-bottom:8px">
+                <input type="tel" id="telefono" placeholder="WhatsApp (Ej: 809...)" required style="margin-bottom:8px">
+                <input type="number" id="monto" placeholder="Monto $" required style="margin-bottom:8px">
+                <div class="grid">
+                    <input type="number" id="tasa" placeholder="Interés %" required>
+                    <input type="number" id="plazo" placeholder="Meses" required>
+                </div>
+                <button type="submit" class="btn-main">CREAR PRÉSTAMO</button>
+            </form>
+        </div>
+        <div class="card" style="border-left: 4px solid var(--danger);">
+            <h3>Registrar Gasto</h3>
+            <form id="expenseForm">
+                <input type="text" id="gasto-desc" placeholder="Gasolina, Papel, etc." required style="margin-bottom:8px">
+                <input type="number" id="gasto-monto" placeholder="Monto $" required style="margin-bottom:8px">
+                <button type="submit" style="background:var(--danger); color:white; width:100%; margin-top:10px;">REGISTRAR GASTO</button>
+            </form>
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="grid">
+            <input type="text" id="busqueda" placeholder="🔍 Buscar cliente o cédula..." onkeyup="actualizarTodo()">
+            <select id="filtroEstado" onchange="actualizarTodo()">
+                <option value="todos">Todos los Préstamos</option>
+                <option value="con_mora">Con Cuotas Pendientes</option>
+            </select>
+        </div>
+        <table id="tablaCartera">
+            <thead><tr><th>Cliente</th><th>Monto</th><th>Acción</th></tr></thead>
+            <tbody></tbody>
+        </table>
+    </div>
+</div>
+
+<div class="overlay" onclick="cerrarModal()"></div>
+<div class="modal" id="modalPlan">
+    <h2 id="modalTitulo" style="margin-top:0;">Plan de Pagos</h2>
+    <div style="max-height: 350px; overflow-y: auto;">
+        <table id="tablaCuotas">
+            <thead><tr><th>Mes</th><th>Monto</th><th>Estado</th><th>Acciones</th></tr></thead>
+            <tbody></tbody>
+        </table>
+    </div>
+    <button onclick="cerrarModal()" style="background:var(--danger); color:white; width:100%; margin-top:15px;">CERRAR VENTANA</button>
+</div>
+
+<div id="recibo-template">
+    <div style="text-align:center; border-bottom:2px solid black;">
+        <h2>RECIBO DE PAGO</h2>
+        <p>Sistema de Préstamos Pro</p>
+    </div>
+    <p><strong>Fecha:</strong> <span id="r-fecha"></span></p>
+    <p><strong>Cliente:</strong> <span id="r-cliente"></span></p>
+    <p><strong>Concepto:</strong> Pago de Cuota #<span id="r-cuota"></span></p>
+    <p><strong>Monto Pagado:</strong> <span id="r-monto"></span></p>
+    <br><br><br>
+    <p style="text-align:center;">__________________________<br>Firma Autorizada</p>
+</div>
+
+<script>
+    // 1. SEGURIDAD / ACCESO (Jonathan: Aquí agregas tus contraseñas vendidas)
+    const SUSCRIPTORES = {
+        "admin123": "2026-12-31",
+        "prestamosRD": "2026-05-10"
+    };
+
+    function validarAcceso() {
+        const key = document.getElementById('pass-key').value;
+        const err = document.getElementById('login-error');
+        if (SUSCRIPTORES[key]) {
+            const exp = new Date(SUSCRIPTORES[key]);
+            if (new Date() <= exp) {
+                document.getElementById('login-screen').style.display = 'none';
+                sessionStorage.setItem('sesion_activa', 'true');
+            } else { err.innerText = "Suscripción Vencida"; err.style.display = 'block'; }
+        } else { err.innerText = "Llave Incorrecta"; err.style.display = 'block'; }
+    }
+
+    // 2. LÓGICA DE NEGOCIO
+    let prestamoActual = null;
+
+    document.getElementById('loanForm').addEventListener('submit', (e) => {
+        e.preventDefault();
+        const monto = parseFloat(document.getElementById('monto').value);
+        const tasa = parseFloat(document.getElementById('tasa').value) / 100;
+        const plazo = parseInt(document.getElementById('plazo').value);
+        const cuota = (monto * tasa) / (1 - Math.pow(1 + tasa, -plazo));
+        
+        const nuevo = {
+            id: Date.now(),
+            nombre: document.getElementById('nombre').value,
+            telefono: document.getElementById('telefono').value,
+            monto: monto,
+            cuotas: Array.from({length: plazo}, (_, i) => ({
+                id: i + 1, monto: cuota.toFixed(2), estado: 'Pendiente'
+            }))
+        };
+        let c = JSON.parse(localStorage.getItem('cartera')) || [];
+        c.push(nuevo);
+        localStorage.setItem('cartera', JSON.stringify(c));
+        e.target.reset();
+        actualizarTodo();
+    });
+
+    document.getElementById('expenseForm').addEventListener('submit', (e) => {
+        e.preventDefault();
+        const g = { id: Date.now(), desc: document.getElementById('gasto-desc').value, monto: parseFloat(document.getElementById('gasto-monto').value) };
+        let gs = JSON.parse(localStorage.getItem('gastos')) || [];
+        gs.push(g);
+        localStorage.setItem('gastos', JSON.stringify(gs));
+        e.target.reset();
+        actualizarTodo();
+    });
+
+    function actualizarTodo() {
+        const busqueda = document.getElementById('busqueda').value.toLowerCase();
+        const filtro = document.getElementById('filtroEstado').value;
+        const tbody = document.querySelector('#tablaCartera tbody');
+        tbody.innerHTML = '';
+        
+        let cartera = JSON.parse(localStorage.getItem('cartera')) || [];
+        let gastos = JSON.parse(localStorage.getItem('gastos')) || [];
+        let pTotal = 0, cTotal = 0, gInteres = 0, expTotal = 0;
+
+        cartera.forEach(p => {
+            pTotal += p.monto;
+            const tieneMora = p.cuotas.some(c => c.estado === 'Pendiente');
+            
+            // Filtros de búsqueda y estado
+            if ((p.nombre.toLowerCase().includes(busqueda)) && (filtro === 'todos' || (filtro === 'con_mora' && tieneMora))) {
+                let fila = tbody.insertRow();
+                fila.innerHTML = `<td>${p.nombre} ${tieneMora ? '<span style="color:var(--danger); font-size:0.6rem;">● MORA</span>' : ''}</td>
+                                  <td>$${p.monto.toLocaleString()}</td>
+                                  <td><button onclick="verPlan(${p.id})" style="background:var(--accent); color:white; padding:4px 8px;">Gestionar</button></td>`;
+            }
+
+            p.cuotas.forEach(c => {
+                if(c.estado === 'Pagado') {
+                    cTotal += parseFloat(c.monto);
+                    gInteres += parseFloat(c.monto) - (p.monto / p.cuotas.length);
+                }
+            });
+        });
+
+        gastos.forEach(g => expTotal += g.monto);
+        
+        document.getElementById('stat-prestado').innerText = `$${pTotal.toLocaleString()}`;
+        document.getElementById('stat-cobrado').innerText = `$${cTotal.toLocaleString()}`;
+        document.getElementById('stat-utilidad').innerText = `$${(gInteres - expTotal).toLocaleString(undefined, {minimumFractionDigits:2})}`;
+    }
+
+    function verPlan(id) {
+        let c = JSON.parse(localStorage.getItem('cartera'));
+        prestamoActual = c.find(i => i.id === id);
+        document.getElementById('modalTitulo').innerText = `Plan: ${prestamoActual.nombre}`;
+        const tbody = document.querySelector('#tablaCuotas tbody');
+        tbody.innerHTML = '';
+
+        prestamoActual.cuotas.forEach(cu => {
+            const msj = `Hola ${prestamoActual.nombre}, recordatorio de pago Cuota #${cu.id} por $${cu.monto}.`;
+            const url = `https://wa.me/${prestamoActual.telefono}?text=${encodeURIComponent(msj)}`;
+            
+            let fila = tbody.insertRow();
+            fila.innerHTML = `
+                <td>#${cu.id}</td><td>$${cu.monto}</td>
+                <td style="color:${cu.estado==='Pagado'?'#39d353':'#e3b341'}">${cu.estado}</td>
+                <td>
+                    ${cu.estado === 'Pendiente' ? 
+                    `<button onclick="cobrar(${cu.id})" style="background:var(--neon); padding:4px 8px;">Cobrar</button>
+                     <a href="${url}" target="_blank" class="btn-ws">WS</a>
+                     <button onclick="masMora(${cu.id})" style="background:var(--danger); color:white; padding:4px 8px;">+</button>` : 
+                    `<button onclick="generarPDF(${cu.id},'${cu.monto}')" style="background:white; padding:4px 8px;">📄</button>`}
+                </td>`;
+        });
+        document.getElementById('modalPlan').style.display = 'block';
+        document.querySelector('.overlay').style.display = 'block';
+    }
+
+    function cobrar(cuotaId) {
+        let c = JSON.parse(localStorage.getItem('cartera'));
+        let pIdx = c.findIndex(i => i.id === prestamoActual.id);
+        let cuIdx = c[pIdx].cuotas.findIndex(cu => cu.id === cuotaId);
+        c[pIdx].cuotas[cuIdx].estado = 'Pagado';
+        localStorage.setItem('cartera', JSON.stringify(c));
+        verPlan(prestamoActual.id);
+        actualizarTodo();
+    }
+
+    function masMora(cuotaId) {
+        const extra = prompt("Monto de mora extra:", "100");
+        if (!extra) return;
+        let c = JSON.parse(localStorage.getItem('cartera'));
+        let pIdx = c.findIndex(i => i.id === prestamoActual.id);
+        let cuIdx = c[pIdx].cuotas.findIndex(cu => cu.id === cuotaId);
+        c[pIdx].cuotas[cuIdx].monto = (parseFloat(c[pIdx].cuotas[cuIdx].monto) + parseFloat(extra)).toFixed(2);
+        localStorage.setItem('cartera', JSON.stringify(c));
+        verPlan(prestamoActual.id);
+    }
+
+    function generarPDF(num, monto) {
+        document.getElementById('r-fecha').innerText = new Date().toLocaleDateString();
+        document.getElementById('r-cliente').innerText = prestamoActual.nombre;
+        document.getElementById('r-cuota').innerText = num;
+        document.getElementById('r-monto').innerText = `$${monto}`;
+        const el = document.getElementById('recibo-template');
+        el.style.display = 'block';
+        html2pdf().from(el).save().then(() => el.style.display = 'none');
+    }
+
+    function exportarDatos() {
+        const d = JSON.stringify({cartera: JSON.parse(localStorage.getItem('cartera')), gastos: JSON.parse(localStorage.getItem('gastos'))});
+        const blob = new Blob([d], {type:'application/json'});
+        const a = document.createElement('a');
+        a.href = URL.createObjectURL(blob);
+        a.download = `backup_prestamos.json`;
+        a.click();
+    }
+
+    function importarDatos(ev) {
+        const reader = new FileReader();
+        reader.onload = (e) => {
+            const data = JSON.parse(e.target.result);
+            localStorage.setItem('cartera', JSON.stringify(data.cartera));
+            localStorage.setItem('gastos', JSON.stringify(data.gastos));
+            actualizarTodo();
+            alert("Sincronizado correctamente");
+        };
+        reader.readAsText(ev.target.files[0]);
+    }
+
+    function cerrarModal() { document.getElementById('modalPlan').style.display = 'none'; document.querySelector('.overlay').style.display = 'none'; }
+
+    window.onload = () => { 
+        if(sessionStorage.getItem('sesion_activa') === 'true') document.getElementById('login-screen').style.display = 'none';
+        actualizarTodo(); 
+    };
+</script>
+</body>
+</html>
