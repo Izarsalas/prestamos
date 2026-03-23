@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Prestamos Pro v2 - Semanal/Quincenal</title>
+    <title>SmartCredit Pro - SaaS Edition</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
     <style>
         :root {
@@ -12,56 +12,76 @@
         }
         body { font-family: 'Segoe UI', sans-serif; background: var(--bg); color: var(--text); padding: 10px; margin: 0; }
         .container { max-width: 1000px; margin: auto; padding: 10px; }
+        
+        /* Login */
         #login-screen { position:fixed; top:0; left:0; width:100%; height:100%; background:var(--bg); z-index:2000; display:flex; justify-content:center; align-items:center; }
+        
+        /* Logo Personalizable */
+        .logo-container { text-align: center; margin-bottom: 20px; cursor: pointer; }
+        #app-logo { max-height: 80px; max-width: 200px; object-fit: contain; border-radius: 8px; }
+        .logo-placeholder { border: 2px dashed var(--border); padding: 10px; border-radius: 10px; display: inline-block; color: var(--accent); font-size: 0.8rem; }
+
         .card { background: var(--card); border: 1px solid var(--border); padding: 20px; border-radius: 12px; margin-bottom: 20px; box-shadow: 0 4px 10px rgba(0,0,0,0.3); }
         .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 15px; margin-bottom: 20px; }
         .stat-card { background: var(--card); border: 1px solid var(--border); padding: 15px; border-radius: 10px; text-align: center; }
         .stat-card h3 { margin: 0; font-size: 0.75rem; color: var(--accent); text-transform: uppercase; }
         .stat-card p { margin: 5px 0; font-size: 1.2rem; font-weight: bold; color: var(--neon); }
+        
         .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 10px; }
-        input, select { padding: 12px; background: #0d1117; border: 1px solid var(--border); border-radius: 8px; color: white; width: 100%; box-sizing: border-box; margin-bottom: 8px; }
+        input, select, textarea { padding: 12px; background: #0d1117; border: 1px solid var(--border); border-radius: 8px; color: white; width: 100%; box-sizing: border-box; margin-bottom: 8px; font-family: inherit; }
+        
         button { padding: 12px; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; transition: 0.3s; }
         .btn-main { background: var(--neon); color: #0d1117; width: 100%; margin-top: 10px; }
+        
         table { width: 100%; border-collapse: collapse; margin-top: 15px; font-size: 0.85rem; }
         th, td { padding: 10px; border-bottom: 1px solid var(--border); text-align: left; }
         th { color: var(--accent); }
-        .modal { display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 95%; max-width: 650px; background: var(--card); border: 1px solid var(--accent); z-index: 100; padding: 20px; border-radius: 15px; box-shadow: 0 0 30px rgba(0,0,0,0.8); }
+        
+        .modal { display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 95%; max-width: 650px; background: var(--card); border: 1px solid var(--accent); z-index: 100; padding: 20px; border-radius: 15px; }
         .overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 50; }
-        #recibo-template { display: none; background: white; color: black; padding: 40px; width: 500px; font-family: Arial; }
+        
         .tabs { display: flex; gap: 10px; margin-bottom: 15px; }
-        .tab-btn { background: #30363d; color: white; flex: 1; }
+        .tab-btn { background: #30363d; color: white; flex: 1; font-size: 0.8rem; }
         .tab-btn.active { background: var(--accent); }
+        
+        #recibo-template { display: none; background: white; color: black; padding: 40px; width: 500px; }
     </style>
 </head>
 <body>
 
 <div id="login-screen">
     <div class="card" style="width:320px; text-align:center;">
-        <h2 style="color:var(--accent)">SISTEMA DE PRÉSTAMOS</h2>
-        <input type="password" id="pass-key" placeholder="Contraseña de Acceso">
-        <button onclick="validarAcceso()" class="btn-main">ENTRAR</button>
+        <h2 style="color:var(--accent)">SMARTCREDIT PRO</h2>
+        <input type="password" id="pass-key" placeholder="Llave de Suscriptor">
+        <button onclick="validarAcceso()" class="btn-main">ENTRAR AL SISTEMA</button>
         <p id="login-error" style="color:var(--danger); font-size:0.8rem; margin-top:10px; display:none;"></p>
     </div>
 </div>
 
 <div class="container">
+    <div class="logo-container" onclick="document.getElementById('logoInput').click()">
+        <img id="app-logo" src="" style="display:none;">
+        <div id="logo-placeholder" class="logo-placeholder">Cargar Logo de Empresa (Clic aquí)</div>
+        <input type="file" id="logoInput" style="display:none" accept="image/*" onchange="cambiarLogo(event)">
+    </div>
+
     <div style="display: flex; justify-content: space-between; margin-bottom: 15px;">
-        <h2 style="margin:0; color:var(--accent);">SmartCredit RD</h2>
+        <h3 style="margin:0; color:var(--text); font-size: 0.9rem;">Control de Préstamos</h3>
         <div>
-            <button onclick="exportarDatos()" style="background:#30363d; color:white; font-size:0.7rem;">📥 BACKUP</button>
-            <button onclick="document.getElementById('fileInput').click()" style="background:#30363d; color:white; font-size:0.7rem;">📤 IMPORTAR</button>
+            <button onclick="exportarDatos()" style="background:#30363d; color:white; font-size:0.6rem;">📥 BACKUP</button>
+            <button onclick="document.getElementById('fileInput').click()" style="background:#30363d; color:white; font-size:0.6rem;">📤 IMPORTAR</button>
             <input type="file" id="fileInput" style="display:none" onchange="importarDatos(event)">
         </div>
     </div>
 
     <div class="stats-grid">
-        <div class="stat-card"><h3>Capital en Calle</h3><p id="stat-prestado">$0</p></div>
-        <div class="stat-card"><h3>Ganancia Neta</h3><p id="stat-utilidad">$0</p></div>
+        <div class="stat-card"><h3>Préstamos Activos</h3><p id="stat-prestado">$0</p></div>
+        <div class="stat-card"><h3>Utilidad Real</h3><p id="stat-utilidad">$0</p></div>
     </div>
 
     <div class="tabs">
-        <button class="tab-btn active" id="tab1" onclick="switchTab('cartera')">Cartera Activa</button>
-        <button class="tab-btn" id="tab2" onclick="switchTab('clientes')">Base de Datos Clientes</button>
+        <button class="tab-btn active" id="tab1" onclick="switchTab('cartera')">Cobros</button>
+        <button class="tab-btn" id="tab2" onclick="switchTab('clientes')">Clientes</button>
     </div>
 
     <div id="view-cartera">
@@ -71,25 +91,26 @@
                 <form id="loanForm">
                     <input type="text" id="nombre" placeholder="Nombre Completo" required>
                     <input type="tel" id="telefono" placeholder="WhatsApp (809...)" required>
+                    <textarea id="direccion" placeholder="Dirección del Cliente" rows="2"></textarea>
                     <input type="number" id="monto" placeholder="Monto $" required>
                     <div class="grid">
                         <input type="number" id="tasa" placeholder="Interés %" required>
-                        <input type="number" id="cuotas_cant" placeholder="Cantidad Cuotas" required>
+                        <input type="number" id="cuotas_cant" placeholder="Cuotas" required>
                     </div>
                     <select id="frecuencia">
-                        <option value="7">Semanal (7 días)</option>
-                        <option value="15">Quincenal (15 días)</option>
-                        <option value="30" selected>Mensual (30 días)</option>
+                        <option value="7">Semanales</option>
+                        <option value="15">Quincenales</option>
+                        <option value="30" selected>Mensuales</option>
                     </select>
-                    <button type="submit" class="btn-main">CREAR PRÉSTAMO</button>
+                    <button type="submit" class="btn-main">CREAR</button>
                 </form>
             </div>
             <div class="card" style="border-left: 4px solid var(--danger);">
-                <h3>Gasto Operativo</h3>
+                <h3>Registrar Gasto</h3>
                 <form id="expenseForm">
-                    <input type="text" id="gasto-desc" placeholder="Motivo del gasto" required>
+                    <input type="text" id="gasto-desc" placeholder="Motivo" required>
                     <input type="number" id="gasto-monto" placeholder="Monto $" required>
-                    <button type="submit" style="background:var(--danger); color:white; width:100%; margin-top:10px;">REGISTRAR</button>
+                    <button type="submit" style="background:var(--danger); color:white; width:100%; margin-top:10px;">GUARDAR GASTO</button>
                 </form>
             </div>
         </div>
@@ -97,7 +118,7 @@
         <div class="card">
             <input type="text" id="busqueda" placeholder="🔍 Buscar por nombre..." onkeyup="actualizarTodo()">
             <table id="tablaCartera">
-                <thead><tr><th>Cliente</th><th>Monto</th><th>Frecuencia</th><th>Acción</th></tr></thead>
+                <thead><tr><th>Cliente</th><th>Monto</th><th>Tipo</th><th>Acción</th></tr></thead>
                 <tbody></tbody>
             </table>
         </div>
@@ -105,9 +126,9 @@
 
     <div id="view-clientes" style="display:none;">
         <div class="card">
-            <h3>Directorio de Clientes Histórico</h3>
+            <h3>Base de Datos Histórica</h3>
             <table id="tablaClientesDB">
-                <thead><tr><th>Nombre</th><th>Teléfono</th><th>Total Préstamos</th></tr></thead>
+                <thead><tr><th>Nombre</th><th>WhatsApp</th><th>Dirección</th><th>Préstamos</th></tr></thead>
                 <tbody></tbody>
             </table>
         </div>
@@ -116,10 +137,11 @@
 
 <div class="overlay" onclick="cerrarModal()"></div>
 <div class="modal" id="modalPlan">
-    <h2 id="modalTitulo">Plan de Pagos</h2>
+    <h2 id="modalTitulo" style="margin-top:0;">Plan de Pagos</h2>
+    <p id="modalDireccion" style="font-size:0.8rem; color:var(--accent); margin-bottom:10px;"></p>
     <div style="max-height: 350px; overflow-y: auto;">
         <table id="tablaCuotas">
-            <thead><tr><th>#</th><th>Fecha</th><th>Monto</th><th>Estado</th><th>Acciones</th></tr></thead>
+            <thead><tr><th>#</th><th>Vence</th><th>Monto</th><th>Estado</th><th>Acciones</th></tr></thead>
             <tbody></tbody>
         </table>
     </div>
@@ -127,23 +149,44 @@
 </div>
 
 <div id="recibo-template">
-    <h2 style="text-align:center">COMPROBANTE DE PAGO</h2>
+    <h2 style="text-align:center">RECIBO DE PAGO</h2>
     <hr>
-    <p><strong>Fecha:</strong> <span id="r-fecha"></span></p>
     <p><strong>Cliente:</strong> <span id="r-cliente"></span></p>
-    <p><strong>Monto:</strong> <span id="r-monto"></span></p>
-    <br><br><p style="text-align:center">Gracias por su pago</p>
+    <p><strong>Fecha:</strong> <span id="r-fecha"></span></p>
+    <p><strong>Monto Pagado:</strong> <span id="r-monto"></span></p>
+    <br><br><p style="text-align:center">¡Gracias por su puntualidad!</p>
 </div>
 
 <script>
-    const SUSCRIPTORES = { "admin123": "2026-12-31", "prestamosRD": "2026-05-10" };
+    const SUSCRIPTORES = { "admin123": "2026-12-31", "prestamosRD": "2026-06-30" };
 
     function validarAcceso() {
         const key = document.getElementById('pass-key').value;
         if (SUSCRIPTORES[key] && new Date() <= new Date(SUSCRIPTORES[key])) {
             document.getElementById('login-screen').style.display = 'none';
             sessionStorage.setItem('sesion_activa', 'true');
-        } else { alert("Llave incorrecta o vencida"); }
+        } else { alert("Llave inválida"); }
+    }
+
+    function cambiarLogo(event) {
+        const file = event.target.files[0];
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            const b64 = e.target.result;
+            localStorage.setItem('appLogo', b64);
+            mostrarLogo(b64);
+        };
+        reader.readAsDataURL(file);
+    }
+
+    function mostrarLogo(src) {
+        const img = document.getElementById('app-logo');
+        const placeholder = document.getElementById('logo-placeholder');
+        if(src) {
+            img.src = src;
+            img.style.display = 'inline-block';
+            placeholder.style.display = 'none';
+        }
     }
 
     function switchTab(view) {
@@ -160,16 +203,15 @@
         const tasa = parseFloat(document.getElementById('tasa').value) / 100;
         const cant = parseInt(document.getElementById('cuotas_cant').value);
         const frec = parseInt(document.getElementById('frecuencia').value);
-        
-        // Cálculo de cuota fija
         const cuotaValor = (monto + (monto * tasa)) / cant;
         
         const nuevo = {
             id: Date.now(),
             nombre: document.getElementById('nombre').value,
             telefono: document.getElementById('telefono').value,
+            direccion: document.getElementById('direccion').value,
             monto: monto,
-            frecuencia: frec === 7 ? 'Semanal' : frec === 15 ? 'Quincenal' : 'Mensual',
+            frecuencia: frec === 7 ? 'Semanales' : frec === 15 ? 'Quincenales' : 'Mensuales',
             cuotas: Array.from({length: cant}, (_, i) => {
                 let f = new Date();
                 f.setDate(f.getDate() + (frec * (i + 1)));
@@ -185,9 +227,8 @@
 
     document.getElementById('expenseForm').addEventListener('submit', (e) => {
         e.preventDefault();
-        const g = { monto: parseFloat(document.getElementById('gasto-monto').value) };
         let gs = JSON.parse(localStorage.getItem('gastos')) || [];
-        gs.push(g);
+        gs.push({ monto: parseFloat(document.getElementById('gasto-monto').value) });
         localStorage.setItem('gastos', JSON.stringify(gs));
         e.target.reset();
         actualizarTodo();
@@ -198,46 +239,45 @@
         const tbody = document.querySelector('#tablaCartera tbody');
         tbody.innerHTML = '';
         let cartera = JSON.parse(localStorage.getItem('cartera')) || [];
-        let pTotal = 0, gInt = 0, gTotal = 0;
+        let pActivo = 0, ganancia = 0, gastosTotal = 0;
 
         cartera.forEach(p => {
-            pTotal += p.monto;
+            pActivo += p.monto;
             if (p.nombre.toLowerCase().includes(busq)) {
                 let fila = tbody.insertRow();
                 fila.innerHTML = `<td>${p.nombre}</td><td>$${p.monto}</td><td>${p.frecuencia}</td>
-                <td><button onclick="verPlan(${p.id})" style="background:var(--accent); color:white; padding:5px;">Gestionar</button></td>`;
+                <td><button onclick="verPlan(${p.id})" style="background:var(--accent); color:white; padding:5px;">Ver</button></td>`;
             }
-            p.cuotas.forEach(cu => { if(cu.estado === 'Pagado') gInt += (parseFloat(cu.monto) - (p.monto / p.cuotas.length)); });
+            p.cuotas.forEach(cu => { if(cu.estado === 'Pagado') ganancia += (parseFloat(cu.monto) - (p.monto / p.cuotas.length)); });
         });
 
-        (JSON.parse(localStorage.getItem('gastos')) || []).forEach(gx => gTotal += gx.monto);
-        document.getElementById('stat-prestado').innerText = `$${pTotal.toLocaleString()}`;
-        document.getElementById('stat-utilidad').innerText = `$${(gInt - gTotal).toLocaleString()}`;
+        (JSON.parse(localStorage.getItem('gastos')) || []).forEach(gx => gastosTotal += gx.monto);
+        document.getElementById('stat-prestado').innerText = `$${pActivo.toLocaleString()}`;
+        document.getElementById('stat-utilidad').innerText = `$${(ganancia - gastosTotal).toLocaleString(undefined, {minimumFractionDigits:2})}`;
     }
 
     function cargarBaseDatos() {
         const tbody = document.querySelector('#tablaClientesDB tbody');
         tbody.innerHTML = '';
         let cartera = JSON.parse(localStorage.getItem('cartera')) || [];
-        // Agrupar por nombre/tel para historial
-        const clientesUnicos = [...new Map(cartera.map(item => [item.nombre, item])).values()];
-        
-        clientesUnicos.forEach(c => {
+        const clientes = [...new Map(cartera.map(item => [item.nombre, item])).values()];
+        clientes.forEach(c => {
             let fila = tbody.insertRow();
-            const totalP = cartera.filter(p => p.nombre === c.nombre).length;
-            fila.innerHTML = `<td>${c.nombre}</td><td>${c.telefono}</td><td>${totalP} Préstamo(s)</td>`;
+            const count = cartera.filter(p => p.nombre === c.nombre).length;
+            fila.innerHTML = `<td>${c.nombre}</td><td>${c.telefono}</td><td>${c.direccion || '---'}</td><td>${count}</td>`;
         });
     }
 
     let pActual = null;
     function verPlan(id) {
         pActual = (JSON.parse(localStorage.getItem('cartera'))).find(i => i.id === id);
-        document.getElementById('modalTitulo').innerText = `Plan de ${pActual.nombre}`;
+        document.getElementById('modalTitulo').innerText = `Gestión: ${pActual.nombre}`;
+        document.getElementById('modalDireccion').innerText = `📍 ${pActual.direccion || 'Sin dirección'}`;
         const tbody = document.querySelector('#tablaCuotas tbody');
         tbody.innerHTML = '';
 
         pActual.cuotas.forEach(cu => {
-            const msj = `Hola ${pActual.nombre}, recordatorio de pago Cuota #${cu.id} ($${cu.monto}) para el ${cu.fecha}.`;
+            const msj = `Hola ${pActual.nombre}, recordatorio de pago de cuota #${cu.id} ($${cu.monto}).`;
             const url = `https://wa.me/${pActual.telefono}?text=${encodeURIComponent(msj)}`;
             let fila = tbody.insertRow();
             fila.innerHTML = `<td>${cu.id}</td><td>${cu.fecha}</td><td>$${cu.monto}</td>
@@ -260,8 +300,8 @@
     }
 
     function recibo(n, m) {
-        document.getElementById('r-fecha').innerText = new Date().toLocaleDateString();
         document.getElementById('r-cliente').innerText = pActual.nombre;
+        document.getElementById('r-fecha').innerText = new Date().toLocaleDateString();
         document.getElementById('r-monto').innerText = `$${m}`;
         const el = document.getElementById('recibo-template');
         el.style.display = 'block';
@@ -272,7 +312,7 @@
         const d = JSON.stringify({cartera: JSON.parse(localStorage.getItem('cartera')), gastos: JSON.parse(localStorage.getItem('gastos'))});
         const a = document.createElement('a');
         a.href = URL.createObjectURL(new Blob([d], {type:'application/json'}));
-        a.download = `backup.json`; a.click();
+        a.download = `backup_sistema.json`; a.click();
     }
 
     function importarDatos(ev) {
@@ -281,13 +321,19 @@
             const data = JSON.parse(e.target.result);
             localStorage.setItem('cartera', JSON.stringify(data.cartera));
             localStorage.setItem('gastos', JSON.stringify(data.gastos));
-            actualizarTodo(); alert("Datos importados");
+            actualizarTodo(); alert("Importación Exitosa");
         };
         reader.readAsText(ev.target.files[0]);
     }
 
     function cerrarModal() { document.getElementById('modalPlan').style.display = 'none'; document.querySelector('.overlay').style.display = 'none'; }
-    window.onload = () => { if(sessionStorage.getItem('sesion_activa')) document.getElementById('login-screen').style.display = 'none'; actualizarTodo(); };
+    
+    window.onload = () => { 
+        if(sessionStorage.getItem('sesion_activa')) document.getElementById('login-screen').style.display = 'none';
+        const savedLogo = localStorage.getItem('appLogo');
+        if(savedLogo) mostrarLogo(savedLogo);
+        actualizarTodo(); 
+    };
 </script>
 </body>
 </html>
