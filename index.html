@@ -3,15 +3,19 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SmartCredit Pro Cloud - Panel Administrativo</title>
+    <title>SmartCredit Pro Cloud - Sistema de Préstamos</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
     <style>
-        :root { --bg: #0d1117; --card: #161b22; --accent: #58a6ff; --neon: #39d353; --border: #30363d; --text: #c9d1d9; --danger: #f85149; }
-        body { font-family: 'Segoe UI', sans-serif; background: var(--bg); color: var(--text); margin: 0; padding: 10px; padding-bottom: 60px; }
+        :root {
+            --bg: #0d1117; --card: #161b22; --accent: #58a6ff;
+            --neon: #39d353; --border: #30363d; --text: #c9d1d9; --danger: #f85149;
+        }
+        body { font-family: 'Segoe UI', sans-serif; background: var(--bg); color: var(--text); margin: 0; padding: 10px; padding-bottom: 80px; }
         .container { max-width: 900px; margin: auto; }
         
         /* LOGIN CLOUD */
         #login-screen { position:fixed; top:0; left:0; width:100%; height:100%; background:var(--bg); z-index:5000; display:flex; justify-content:center; align-items:center; }
+        .login-card { background: var(--card); border: 1px solid var(--border); padding: 30px; border-radius: 15px; width: 320px; text-align: center; }
         
         .card { background: var(--card); border: 1px solid var(--border); padding: 20px; border-radius: 12px; margin-bottom: 15px; }
         .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 10px; }
@@ -19,70 +23,71 @@
         button { padding: 12px; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; transition: 0.3s; width: 100%; }
         .btn-main { background: var(--neon); color: #0d1117; }
         
-        .tabs { display: flex; gap: 5px; margin-bottom: 15px; position: sticky; top: 0; background: var(--bg); padding: 5px 0; z-index: 10; }
-        .tab-btn { background: #30363d; color: white; flex: 1; font-size: 0.7rem; }
+        .tabs { display: flex; gap: 5px; margin-bottom: 15px; position: sticky; top: 0; background: var(--bg); padding: 10px 0; z-index: 100; }
+        .tab-btn { background: #30363d; color: white; flex: 1; font-size: 0.75rem; }
         .tab-btn.active { background: var(--accent); }
+
+        table { width: 100%; border-collapse: collapse; font-size: 0.85rem; }
+        th, td { padding: 12px 8px; border-bottom: 1px solid var(--border); text-align: left; }
         
-        table { width: 100%; border-collapse: collapse; font-size: 0.8rem; }
-        th, td { padding: 10px; border-bottom: 1px solid var(--border); text-align: left; }
-        
-        .modal { display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 95%; max-width: 500px; background: var(--card); border: 1px solid var(--accent); z-index: 1000; padding: 20px; border-radius: 15px; max-height: 80vh; overflow-y: auto; }
-        .overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); z-index: 900; }
+        .modal { display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 95%; max-width: 550px; background: var(--card); border: 1px solid var(--accent); z-index: 1000; padding: 20px; border-radius: 15px; max-height: 85vh; overflow-y: auto; }
+        .overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); z-index: 900; }
+
+        #logo-img { max-height: 60px; display: none; margin: auto; margin-bottom: 10px; }
+        #factura-dgi { display: none; background: white; color: black; padding: 30px; width: 500px; font-family: 'Courier New', monospace; }
     </style>
 </head>
 <body>
 
 <div id="login-screen">
-    <div class="card" style="width:320px; text-align:center;">
+    <div class="login-card">
         <h2 style="color:var(--accent)">SmartCredit Pro</h2>
-        <p style="font-size:0.8rem">Ingresa tus credenciales de suscriptor</p>
-        <input type="email" id="user-email" placeholder="Correo electrónico">
-        <input type="password" id="user-pass" placeholder="Contraseña">
-        <button onclick="login()" class="btn-main" id="btn-login">INICIAR SESIÓN</button>
-        <p id="auth-error" style="color:var(--danger); font-size:0.8rem; display:none; margin-top:10px;"></p>
+        <input type="email" id="auth-email" placeholder="Correo electrónico">
+        <input type="password" id="auth-pass" placeholder="Contraseña">
+        <button onclick="login()" class="btn-main">ENTRAR AL SISTEMA</button>
+        <p id="error-msg" style="color:var(--danger); font-size:0.8rem; display:none; margin-top:10px;"></p>
     </div>
 </div>
 
 <div class="container">
-    <div id="header-logo" style="text-align:center; margin-bottom:15px;" onclick="document.getElementById('logoInput').click()">
-        <img id="logo-img" style="max-height:50px; display:none; margin:auto;">
-        <div id="logo-hint" style="font-size:0.6rem; color:var(--accent); border:1px dashed; padding:5px; border-radius:5px;">Cambiar Logo</div>
-        <input type="file" id="logoInput" style="display:none" onchange="subirLogo(event)">
+    <div id="logo-area" style="text-align:center; margin-bottom:20px;" onclick="document.getElementById('logoInput').click()">
+        <img id="logo-img" src="">
+        <div id="logo-placeholder" style="border:1px dashed var(--accent); padding:10px; border-radius:8px; cursor:pointer; font-size:0.7rem;">CARGAR LOGO</div>
+        <input type="file" id="logoInput" style="display:none" accept="image/*" onchange="subirLogo(event)">
     </div>
 
     <div class="tabs">
-        <button class="tab-btn active" onclick="nav('cartera')">Cobros</button>
-        <button class="tab-btn" onclick="nav('clientes')">Directorio</button>
-        <button class="tab-btn" onclick="nav('fiscal')">DGI</button>
-        <button class="tab-btn" onclick="logout()" style="background:var(--danger)">Salir</button>
+        <button class="tab-btn active" id="t-cobros" onclick="nav('cobros')">COBROS</button>
+        <button class="tab-btn" id="t-clientes" onclick="nav('clientes')">CLIENTES</button>
+        <button class="tab-btn" id="t-dgi" onclick="nav('dgi')">DGI</button>
+        <button class="tab-btn" onclick="salir()" style="background:var(--danger)">SALIR</button>
     </div>
 
-    <div id="sec-cartera">
+    <div id="sec-cobros">
         <div class="card">
             <h3>Nuevo Préstamo</h3>
             <form id="loanForm">
-                <input type="text" id="c-nombre" placeholder="Nombre Cliente" required>
-                <input type="text" id="c-rnc" placeholder="RNC/Cédula">
-                <input type="tel" id="c-tel" placeholder="WhatsApp (Ej: 809...)">
-                <input type="text" id="c-dir" placeholder="Dirección">
+                <input type="text" id="p-nombre" placeholder="Nombre Cliente" required>
+                <input type="text" id="p-rnc" placeholder="RNC/Cédula">
+                <input type="tel" id="p-tel" placeholder="WhatsApp">
+                <textarea id="p-dir" placeholder="Dirección del Cliente" rows="2"></textarea>
                 <div class="grid">
-                    <input type="number" id="c-monto" placeholder="Monto $" required>
-                    <input type="number" id="c-tasa" placeholder="Interés %" required>
+                    <input type="number" id="p-monto" placeholder="Monto $" required>
+                    <input type="number" id="p-tasa" placeholder="Interés %" required>
                 </div>
                 <div class="grid">
-                    <input type="number" id="c-cuotas" placeholder="Cuotas" required>
-                    <select id="c-frec">
+                    <input type="number" id="p-cuotas" placeholder="Cuotas" required>
+                    <select id="p-frec">
                         <option value="7">Semanal</option>
                         <option value="15">Quincenal</option>
-                        <option value="30">Mensual</option>
+                        <option value="30" selected>Mensual</option>
                     </select>
                 </div>
-                <button type="submit" class="btn-main">GENERAR PRÉSTAMO</button>
+                <button type="submit" class="btn-main">CREAR</button>
             </form>
         </div>
-
         <div class="card">
-            <input type="text" placeholder="🔍 Buscar cliente..." onkeyup="dibujarTabla(this.value)">
+            <input type="text" placeholder="🔍 Buscar..." onkeyup="renderTable(this.value)">
             <table id="mainTable">
                 <thead><tr><th>Cliente</th><th>Monto</th><th>Tipo</th><th>Acción</th></tr></thead>
                 <tbody></tbody>
@@ -90,36 +95,33 @@
         </div>
     </div>
 
-    <div id="sec-fiscal" style="display:none">
-        <div class="card">
-            <h3>Configuración NCF</h3>
-            <input type="text" id="dgi-rnc" placeholder="RNC Negocio">
-            <input type="text" id="dgi-prefijo" placeholder="Prefijo (Ej: B01)">
-            <input type="number" id="dgi-sec" placeholder="Secuencia Actual">
-            <button onclick="guardarDGI()" class="btn-main">GUARDAR CONFIGURACIÓN</button>
-        </div>
+    <div id="sec-clientes" style="display:none">
+        <div class="card"><h3>Directorio</h3><table id="clientsTable"><thead><tr><th>Nombre</th><th>Tel</th><th>Dirección</th></tr></thead><tbody></tbody></table></div>
     </div>
 
-    <div id="sec-clientes" style="display:none">
+    <div id="sec-dgi" style="display:none">
         <div class="card">
-            <h3>Base de Datos de Clientes</h3>
-            <table id="clientsTable">
-                <thead><tr><th>Nombre</th><th>Teléfono</th><th>Dirección</th></tr></thead>
-                <tbody></tbody>
-            </table>
+            <h3>Configuración Fiscal</h3>
+            <input type="text" id="dgi-rnc" placeholder="RNC Negocio">
+            <input type="text" id="dgi-pref" placeholder="Prefijo NCF">
+            <input type="number" id="dgi-sec" placeholder="Secuencia">
+            <button onclick="saveConfig()" class="btn-main">GUARDAR</button>
         </div>
     </div>
 </div>
 
 <div class="overlay" onclick="closeModal()"></div>
 <div class="modal" id="pModal">
-    <h2 id="m-name" style="margin:0"></h2>
+    <h3 id="m-name"></h3>
     <p id="m-dir" style="font-size:0.7rem; color:var(--accent)"></p>
-    <table id="m-table">
-        <thead><tr><th>#</th><th>Vence</th><th>Monto</th><th>Acción</th></tr></thead>
-        <tbody></tbody>
-    </table>
-    <button onclick="closeModal()" style="margin-top:10px; background:var(--danger); color:white;">CERRAR</button>
+    <table id="m-table"><thead><tr><th>#</th><th>Fecha</th><th>Monto</th><th>Acción</th></tr></thead><tbody></tbody></table>
+    <button onclick="closeModal()" style="margin-top:15px; background:var(--danger); color:white;">CERRAR</button>
+</div>
+
+<div id="factura-dgi">
+    <div style="text-align:center"><h3 id="f-emp">EMPRESA</h3><p>RNC: <span id="f-rnc-e"></span></p><p>NCF: <span id="f-ncf"></span></p></div>
+    <hr><p>Cliente: <span id="f-cli"></span></p><p>Fecha: <span id="f-fec"></span></p><hr>
+    <p>Abono: <span id="f-mon"></span></p>
 </div>
 
 <script type="module">
@@ -127,7 +129,7 @@
     import { getAuth, signInWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
     import { getFirestore, doc, setDoc, getDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
-    // 1. PEGA TUS CREDENCIALES AQUÍ
+    // --- REEMPLAZA ESTO CON TUS DATOS DE FIREBASE ---
     const firebaseConfig = {
       apiKey: "TU_API_KEY",
       authDomain: "TU_PROYECTO.firebaseapp.com",
@@ -144,157 +146,128 @@
     let CARTERA = [];
     let UID = null;
 
-    // --- AUTENTICACIÓN ---
     window.login = async () => {
-        const email = document.getElementById('user-email').value;
-        const pass = document.getElementById('user-pass').value;
-        try {
-            await signInWithEmailAndPassword(auth, email, pass);
-        } catch (e) { 
-            document.getElementById('auth-error').innerText = "Credenciales Inválidas";
-            document.getElementById('auth-error').style.display = 'block';
-        }
+        const email = document.getElementById('auth-email').value;
+        const pass = document.getElementById('auth-pass').value;
+        try { await signInWithEmailAndPassword(auth, email, pass); } 
+        catch (e) { document.getElementById('error-msg').innerText = "Acceso incorrecto"; document.getElementById('error-msg').style.display = 'block'; }
     };
 
-    window.logout = () => { signOut(auth); location.reload(); };
+    window.salir = () => signOut(auth);
 
     onAuthStateChanged(auth, async (user) => {
-        if (user) {
-            UID = user.uid;
-            document.getElementById('login-screen').style.display = 'none';
-            await loadData();
-        } else {
-            document.getElementById('login-screen').style.display = 'flex';
-        }
+        if (user) { UID = user.uid; document.getElementById('login-screen').style.display = 'none'; await load(); }
+        else { document.getElementById('login-screen').style.display = 'flex'; }
     });
 
-    // --- BASE DE DATOS CLOUD ---
     async function sync() {
         if(!UID) return;
         await setDoc(doc(db, "usuarios", UID), {
             cartera: CARTERA,
-            configDGI: {
-                rnc: document.getElementById('dgi-rnc').value,
-                pref: document.getElementById('dgi-prefijo').value,
-                sec: document.getElementById('dgi-sec').value
-            },
+            config: { rnc: document.getElementById('dgi-rnc').value, pref: document.getElementById('dgi-pref').value, sec: document.getElementById('dgi-sec').value },
             logo: localStorage.getItem('appLogo')
         });
     }
 
-    async function loadData() {
-        const snap = await getDoc(doc(db, "usuarios", UID));
-        if(snap.exists()){
-            const data = snap.data();
-            CARTERA = data.cartera || [];
-            if(data.configDGI){
-                document.getElementById('dgi-rnc').value = data.configDGI.rnc || "";
-                document.getElementById('dgi-prefijo').value = data.configDGI.pref || "";
-                document.getElementById('dgi-sec').value = data.configDGI.sec || "";
-            }
-            if(data.logo){ 
-                localStorage.setItem('appLogo', data.logo);
-                renderLogo(data.logo);
-            }
-            dibujarTabla();
+    async function load() {
+        const s = await getDoc(doc(db, "usuarios", UID));
+        if(s.exists()){
+            const d = s.data();
+            CARTERA = d.cartera || [];
+            if(d.config){ document.getElementById('dgi-rnc').value = d.config.rnc; document.getElementById('dgi-pref').value = d.config.pref; document.getElementById('dgi-sec').value = d.config.sec; }
+            if(d.logo){ localStorage.setItem('appLogo', d.logo); renderLogo(d.logo); }
+            renderTable();
         }
     }
 
-    // --- LÓGICA DE NEGOCIO ---
     document.getElementById('loanForm').onsubmit = async (e) => {
         e.preventDefault();
-        const monto = parseFloat(document.getElementById('c-monto').value);
-        const tasa = parseFloat(document.getElementById('c-tasa').value)/100;
-        const cuotas = parseInt(document.getElementById('c-cuotas').value);
-        const frec = parseInt(document.getElementById('c-frec').value);
-        const montoCuota = (monto + (monto * tasa)) / cuotas;
+        const m = parseFloat(document.getElementById('p-monto').value);
+        const t = parseFloat(document.getElementById('p-tasa').value)/100;
+        const c = parseInt(document.getElementById('p-cuotas').value);
+        const f = parseInt(document.getElementById('p-frec').value);
+        const cuota = (m + (m*t))/c;
 
-        const nuevo = {
+        CARTERA.push({
             id: Date.now(),
-            nombre: document.getElementById('c-nombre').value,
-            rnc: document.getElementById('c-rnc').value,
-            tel: document.getElementById('c-tel').value,
-            dir: document.getElementById('c-dir').value,
-            monto: monto,
-            frec: frec == 7 ? 'Semanales' : frec == 15 ? 'Quincenales' : 'Mensuales',
-            plan: Array.from({length: cuotas}, (_, i) => {
-                let f = new Date(); f.setDate(f.getDate() + (frec * (i+1)));
-                return { id: i+1, fecha: f.toLocaleDateString(), monto: montoCuota.toFixed(2), pagado: false };
+            nombre: document.getElementById('p-nombre').value,
+            rnc: document.getElementById('p-rnc').value,
+            tel: document.getElementById('p-tel').value,
+            dir: document.getElementById('p-dir').value,
+            monto: m,
+            frec: f==7?'Semanal':f==15?'Quincenal':'Mensual',
+            plan: Array.from({length: c}, (_, i) => {
+                let d = new Date(); d.setDate(d.getDate() + (f*(i+1)));
+                return { id: i+1, fecha: d.toLocaleDateString(), monto: cuota.toFixed(2), pagado: false };
             })
-        };
-        CARTERA.push(nuevo);
-        await sync();
-        e.target.reset();
-        dibujarTabla();
+        });
+        await sync(); e.target.reset(); renderTable();
     };
 
-    window.dibujarTabla = (filtro = "") => {
-        const tbody = document.querySelector('#mainTable tbody');
-        tbody.innerHTML = '';
-        CARTERA.filter(p => p.nombre.toLowerCase().includes(filtro.toLowerCase())).forEach(p => {
-            let f = tbody.insertRow();
-            f.innerHTML = `<td>${p.nombre}</td><td>$${p.monto}</td><td>${p.frec}</td>
-            <td><button onclick="openPlan(${p.id})" style="background:var(--accent); color:white; padding:5px;">Ver</button></td>`;
+    window.renderTable = (filter = "") => {
+        const tb = document.querySelector('#mainTable tbody'); tb.innerHTML = '';
+        CARTERA.filter(p => p.nombre.toLowerCase().includes(filter.toLowerCase())).forEach(p => {
+            tb.innerHTML += `<tr><td>${p.nombre}</td><td>$${p.monto}</td><td>${p.frec}</td><td><button onclick="openModal(${p.id})" style="background:var(--accent); color:white; padding:5px;">VER</button></td></tr>`;
         });
     };
 
-    window.openPlan = (id) => {
+    window.openModal = (id) => {
         const p = CARTERA.find(x => x.id === id);
-        window.currentP = p;
+        window.curr = p;
         document.getElementById('m-name').innerText = p.nombre;
         document.getElementById('m-dir').innerText = `📍 ${p.dir || 'Sin dirección'}`;
-        const tbody = document.querySelector('#m-table tbody');
-        tbody.innerHTML = '';
+        const tb = document.querySelector('#m-table tbody'); tb.innerHTML = '';
         p.plan.forEach(c => {
-            const url = `https://wa.me/${p.tel}?text=${encodeURIComponent("Cobro Cuota #"+c.id+" de $"+c.monto)}`;
-            tbody.innerHTML += `<tr><td>${c.id}</td><td>${c.fecha}</td><td>$${c.monto}</td>
-            <td>${!c.pagado ? `<button onclick="pagar(${c.id})" style="background:var(--neon)">$</button> <a href="${url}" target="_blank">💬</a>` : '✅'}</td></tr>`;
+            tb.innerHTML += `<tr><td>${c.id}</td><td>${c.fecha}</td><td>$${c.monto}</td><td>
+                ${!c.pagado ? `<button onclick="cobrar(${c.id})" style="background:var(--neon)">$</button>` : `<button onclick="factura(${c.id},'${c.monto}')">📄</button>`}
+            </td></tr>`;
         });
-        document.getElementById('pModal').style.display = 'block';
-        document.querySelector('.overlay').style.display = 'block';
+        document.getElementById('pModal').style.display='block'; document.querySelector('.overlay').style.display='block';
     };
 
-    window.pagar = async (cuId) => {
-        const pIdx = CARTERA.findIndex(x => x.id === window.currentP.id);
-        const cIdx = CARTERA[pIdx].plan.findIndex(c => c.id === cuId);
-        CARTERA[pIdx].plan[cIdx].pagado = true;
-        await sync();
-        openPlan(window.currentP.id);
+    window.cobrar = async (id) => {
+        const pIdx = CARTERA.findIndex(x => x.id === window.curr.id);
+        CARTERA[pIdx].plan.find(c => c.id === id).pagado = true;
+        await sync(); openModal(window.curr.id);
+    };
+
+    window.factura = (id, m) => {
+        const rncE = document.getElementById('dgi-rnc').value;
+        const ncf = document.getElementById('dgi-pref').value + document.getElementById('dgi-sec').value.padStart(8,'0');
+        document.getElementById('f-rnc-e').innerText = rncE;
+        document.getElementById('f-ncf').innerText = ncf;
+        document.getElementById('f-cli').innerText = window.curr.nombre;
+        document.getElementById('f-fec').innerText = new Date().toLocaleDateString();
+        document.getElementById('f-mon').innerText = "$"+m;
+        const el = document.getElementById('factura-dgi'); el.style.display='block';
+        html2pdf().from(el).save().then(() => { 
+            el.style.display='none'; 
+            document.getElementById('dgi-sec').value = parseInt(document.getElementById('dgi-sec').value)+1; 
+            sync(); 
+        });
     };
 
     window.nav = (s) => {
-        ['cartera', 'clientes', 'fiscal'].forEach(x => document.getElementById('sec-'+x).style.display = 'none');
-        document.getElementById('sec-'+s).style.display = 'block';
-        if(s === 'clientes') renderClients();
+        ['cobros', 'clientes', 'dgi'].forEach(x => document.getElementById('sec-'+x).style.display='none');
+        document.getElementById('sec-'+s).style.display='block';
+        if(s==='clientes') renderClients();
     };
 
     function renderClients() {
-        const tbody = document.querySelector('#clientsTable tbody');
-        tbody.innerHTML = '';
-        const unicos = [...new Map(CARTERA.map(item => [item.nombre, item])).values()];
-        unicos.forEach(c => {
-            tbody.innerHTML += `<tr><td>${c.nombre}</td><td>${c.tel}</td><td>${c.dir}</td></tr>`;
+        const tb = document.querySelector('#clientsTable tbody'); tb.innerHTML = '';
+        [...new Map(CARTERA.map(i => [i.nombre, i])).values()].forEach(c => {
+            tb.innerHTML += `<tr><td>${c.nombre}</td><td>${c.tel}</td><td>${c.dir}</td></tr>`;
         });
     }
 
     window.subirLogo = (ev) => {
-        const reader = new FileReader();
-        reader.onload = (e) => { 
-            localStorage.setItem('appLogo', e.target.result); 
-            renderLogo(e.target.result);
-            sync();
-        };
-        reader.readAsDataURL(ev.target.files[0]);
+        const r = new FileReader(); r.onload = (e) => { localStorage.setItem('appLogo', e.target.result); renderLogo(e.target.result); sync(); };
+        r.readAsDataURL(ev.target.files[0]);
     };
 
-    function renderLogo(src) {
-        document.getElementById('logo-img').src = src;
-        document.getElementById('logo-img').style.display = 'block';
-        document.getElementById('logo-hint').style.display = 'none';
-    }
-
-    window.closeModal = () => { document.getElementById('pModal').style.display = 'none'; document.querySelector('.overlay').style.display = 'none'; };
-    window.guardarDGI = () => { sync(); alert("Configuración guardada en la nube"); };
+    function renderLogo(s) { document.getElementById('logo-img').src=s; document.getElementById('logo-img').style.display='block'; document.getElementById('logo-placeholder').style.display='none'; }
+    window.saveConfig = () => sync();
+    window.closeModal = () => { document.getElementById('pModal').style.display='none'; document.querySelector('.overlay').style.display='none'; };
 </script>
 </body>
 </html>
