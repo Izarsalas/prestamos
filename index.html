@@ -15,7 +15,7 @@
         
         /* LOGIN CLOUD */
         #login-screen { position:fixed; top:0; left:0; width:100%; height:100%; background:var(--bg); z-index:5000; display:flex; justify-content:center; align-items:center; }
-        .login-card { background: var(--card); border: 1px solid var(--border); padding: 30px; border-radius: 15px; width: 320px; text-align: center; }
+        .login-card { background: var(--card); border: 1px solid var(--border); padding: 30px; border-radius: 15px; width: 320px; text-align: center; box-shadow: 0 10px 25px rgba(0,0,0,0.5); }
         
         .card { background: var(--card); border: 1px solid var(--border); padding: 20px; border-radius: 12px; margin-bottom: 15px; }
         .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 10px; }
@@ -23,7 +23,7 @@
         button { padding: 12px; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; transition: 0.3s; width: 100%; }
         .btn-main { background: var(--neon); color: #0d1117; }
         
-        .tabs { display: flex; gap: 5px; margin-bottom: 15px; position: sticky; top: 0; background: var(--bg); padding: 10px 0; z-index: 100; }
+        .tabs { display: flex; gap: 5px; margin-bottom: 15px; position: sticky; top: 0; background: var(--bg); padding: 10px 0; z-index: 100; border-bottom: 1px solid var(--border); }
         .tab-btn { background: #30363d; color: white; flex: 1; font-size: 0.75rem; }
         .tab-btn.active { background: var(--accent); }
 
@@ -42,6 +42,7 @@
 <div id="login-screen">
     <div class="login-card">
         <h2 style="color:var(--accent)">SmartCredit Pro</h2>
+        <p style="font-size:0.7rem; color:var(--text); margin-bottom:15px;">Panel de Gestión en la Nube</p>
         <input type="email" id="auth-email" placeholder="Correo electrónico">
         <input type="password" id="auth-pass" placeholder="Contraseña">
         <button onclick="login()" class="btn-main">ENTRAR AL SISTEMA</button>
@@ -52,28 +53,28 @@
 <div class="container">
     <div id="logo-area" style="text-align:center; margin-bottom:20px;" onclick="document.getElementById('logoInput').click()">
         <img id="logo-img" src="">
-        <div id="logo-placeholder" style="border:1px dashed var(--accent); padding:10px; border-radius:8px; cursor:pointer; font-size:0.7rem;">CARGAR LOGO</div>
+        <div id="logo-placeholder" style="border:1px dashed var(--accent); padding:10px; border-radius:8px; cursor:pointer; font-size:0.7rem;">CARGAR LOGO DE EMPRESA</div>
         <input type="file" id="logoInput" style="display:none" accept="image/*" onchange="subirLogo(event)">
     </div>
 
     <div class="tabs">
         <button class="tab-btn active" id="t-cobros" onclick="nav('cobros')">COBROS</button>
         <button class="tab-btn" id="t-clientes" onclick="nav('clientes')">CLIENTES</button>
-        <button class="tab-btn" id="t-dgi" onclick="nav('dgi')">DGI</button>
-        <button class="tab-btn" onclick="salir()" style="background:var(--danger)">SALIR</button>
+        <button class="tab-btn" id="t-dgi" onclick="nav('dgi')">⚙️ DGI</button>
+        <button class="tab-btn" onclick="salir()" style="background:var(--danger); color:white;">SALIR</button>
     </div>
 
     <div id="sec-cobros">
         <div class="card">
-            <h3>Nuevo Préstamo</h3>
+            <h3>Registrar Préstamo</h3>
             <form id="loanForm">
-                <input type="text" id="p-nombre" placeholder="Nombre Cliente" required>
-                <input type="text" id="p-rnc" placeholder="RNC/Cédula">
-                <input type="tel" id="p-tel" placeholder="WhatsApp">
+                <input type="text" id="p-nombre" placeholder="Nombre Completo" required>
+                <input type="text" id="p-rnc" placeholder="RNC / Cédula">
+                <input type="tel" id="p-tel" placeholder="WhatsApp (809...)">
                 <textarea id="p-dir" placeholder="Dirección del Cliente" rows="2"></textarea>
                 <div class="grid">
-                    <input type="number" id="p-monto" placeholder="Monto $" required>
-                    <input type="number" id="p-tasa" placeholder="Interés %" required>
+                    <input type="number" id="p-monto" placeholder="Monto Capital $" required>
+                    <input type="number" id="p-tasa" placeholder="Interés Total %" required>
                 </div>
                 <div class="grid">
                     <input type="number" id="p-cuotas" placeholder="Cuotas" required>
@@ -83,88 +84,143 @@
                         <option value="30" selected>Mensual</option>
                     </select>
                 </div>
-                <button type="submit" class="btn-main">CREAR</button>
+                <button type="submit" class="btn-main">GENERAR PRÉSTAMO</button>
             </form>
         </div>
         <div class="card">
-            <input type="text" placeholder="🔍 Buscar..." onkeyup="renderTable(this.value)">
+            <input type="text" placeholder="🔍 Buscar cliente..." onkeyup="renderTable(this.value)">
             <table id="mainTable">
-                <thead><tr><th>Cliente</th><th>Monto</th><th>Tipo</th><th>Acción</th></tr></thead>
+                <thead><tr><th>Cliente</th><th>Monto</th><th>Modalidad</th><th>Acción</th></tr></thead>
                 <tbody></tbody>
             </table>
         </div>
     </div>
 
     <div id="sec-clientes" style="display:none">
-        <div class="card"><h3>Directorio</h3><table id="clientsTable"><thead><tr><th>Nombre</th><th>Tel</th><th>Dirección</th></tr></thead><tbody></tbody></table></div>
+        <div class="card">
+            <h3>Base de Datos de Clientes</h3>
+            <table id="clientsTable">
+                <thead><tr><th>Nombre</th><th>WhatsApp</th><th>Dirección</th></tr></thead>
+                <tbody></tbody>
+            </table>
+        </div>
     </div>
 
     <div id="sec-dgi" style="display:none">
         <div class="card">
-            <h3>Configuración Fiscal</h3>
-            <input type="text" id="dgi-rnc" placeholder="RNC Negocio">
-            <input type="text" id="dgi-pref" placeholder="Prefijo NCF">
-            <input type="number" id="dgi-sec" placeholder="Secuencia">
-            <button onclick="saveConfig()" class="btn-main">GUARDAR</button>
+            <h3>Configuración Fiscal (DGI)</h3>
+            <input type="text" id="dgi-rnc" placeholder="RNC de tu Negocio">
+            <div class="grid">
+                <input type="text" id="dgi-pref" placeholder="Prefijo NCF (Ej: B01)">
+                <input type="number" id="dgi-sec" placeholder="Secuencia Actual">
+            </div>
+            <button onclick="saveConfig()" class="btn-main">GUARDAR CONFIGURACIÓN</button>
         </div>
     </div>
 </div>
 
 <div class="overlay" onclick="closeModal()"></div>
 <div class="modal" id="pModal">
-    <h3 id="m-name"></h3>
-    <p id="m-dir" style="font-size:0.7rem; color:var(--accent)"></p>
-    <table id="m-table"><thead><tr><th>#</th><th>Fecha</th><th>Monto</th><th>Acción</th></tr></thead><tbody></tbody></table>
-    <button onclick="closeModal()" style="margin-top:15px; background:var(--danger); color:white;">CERRAR</button>
+    <h3 id="m-name" style="margin-bottom:5px;"></h3>
+    <p id="m-dir" style="font-size:0.75rem; color:var(--accent); margin-bottom:15px;"></p>
+    <table id="m-table">
+        <thead><tr><th>#</th><th>Vence</th><th>Monto</th><th>Acción</th></tr></thead>
+        <tbody></tbody>
+    </table>
+    <button onclick="closeModal()" style="margin-top:20px; background:var(--danger); color:white;">CERRAR</button>
 </div>
 
 <div id="factura-dgi">
-    <div style="text-align:center"><h3 id="f-emp">EMPRESA</h3><p>RNC: <span id="f-rnc-e"></span></p><p>NCF: <span id="f-ncf"></span></p></div>
-    <hr><p>Cliente: <span id="f-cli"></span></p><p>Fecha: <span id="f-fec"></span></p><hr>
-    <p>Abono: <span id="f-mon"></span></p>
+    <div style="text-align:center">
+        <h2 id="f-emp">RECIBO DE PAGO</h2>
+        <p>RNC: <span id="f-rnc-e"></span></p>
+        <p><strong>NCF: <span id="f-ncf"></span></strong></p>
+    </div>
+    <hr>
+    <p><strong>Fecha:</strong> <span id="f-fec"></span></p>
+    <p><strong>Cliente:</strong> <span id="f-cli"></span></p>
+    <hr>
+    <table style="width:100%; color:black; margin-top:10px;">
+        <thead><tr><th>Descripción</th><th>Total</th></tr></thead>
+        <tbody><tr><td>Abono a Préstamo</td><td id="f-mon"></td></tr></tbody>
+    </table>
+    <br><br>
+    <p style="text-align:center; font-size:0.8rem;">Copia Cliente - SmartCredit Pro Cloud</p>
 </div>
 
 <script type="module">
+    // --- IMPORTACIONES SDK DE FIREBASE ---
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+    import { getAnalytics } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-analytics.js";
     import { getAuth, signInWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
     import { getFirestore, doc, setDoc, getDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
-    // --- REEMPLAZA ESTO CON TUS DATOS DE FIREBASE ---
+    // --- CONFIGURACIÓN DE TU APP ---
     const firebaseConfig = {
-      apiKey: "TU_API_KEY",
-      authDomain: "TU_PROYECTO.firebaseapp.com",
-      projectId: "TU_PROYECTO",
-      storageBucket: "TU_PROYECTO.appspot.com",
-      messagingSenderId: "TU_ID",
-      appId: "TU_APP_ID"
+      apiKey: "AIzaSyBG8gNLEehKd_UPay-rTb5nVr2Vw3WfiHs",
+      authDomain: "pres-9e035.firebaseapp.com",
+      projectId: "pres-9e035",
+      storageBucket: "pres-9e035.firebasestorage.app",
+      messagingSenderId: "561822383782",
+      appId: "1:561822383782:web:60ea314bd3dc7a28333e67",
+      measurementId: "G-GZCQGNX3N8"
     };
 
+    // --- INICIALIZACIÓN ---
     const app = initializeApp(firebaseConfig);
+    const analytics = getAnalytics(app);
     const auth = getAuth(app);
     const db = getFirestore(app);
 
     let CARTERA = [];
     let UID = null;
 
+    // --- ACCESO Y SEGURIDAD ---
     window.login = async () => {
-        const email = document.getElementById('auth-email').value;
-        const pass = document.getElementById('auth-pass').value;
-        try { await signInWithEmailAndPassword(auth, email, pass); } 
-        catch (e) { document.getElementById('error-msg').innerText = "Acceso incorrecto"; document.getElementById('error-msg').style.display = 'block'; }
+        const emailIngresado = document.getElementById('auth-email').value;
+        const passIngresada = document.getElementById('auth-pass').value;
+        const errorMsg = document.getElementById('error-msg');
+
+        // Credenciales Maestras
+        const EMAIL_M = "izarsalas.1@gmail.com";
+        const PASS_M = "J2620280.s";
+
+        try {
+            await signInWithEmailAndPassword(auth, emailIngresado, passIngresada);
+        } catch (e) {
+            // Validación Manual de respaldo
+            if (emailIngresado === EMAIL_M && passIngresada === PASS_M) {
+                document.getElementById('login-screen').style.display = 'none';
+                alert("Entrando con Usuario Maestro.");
+            } else {
+                errorMsg.innerText = "Credenciales incorrectas o error de red.";
+                errorMsg.style.display = 'block';
+            }
+        }
     };
 
     window.salir = () => signOut(auth);
 
     onAuthStateChanged(auth, async (user) => {
-        if (user) { UID = user.uid; document.getElementById('login-screen').style.display = 'none'; await load(); }
-        else { document.getElementById('login-screen').style.display = 'flex'; }
+        if (user) { 
+            UID = user.uid; 
+            document.getElementById('login-screen').style.display = 'none'; 
+            await load(); 
+        } else { 
+            document.getElementById('login-screen').style.display = 'flex'; 
+        }
     });
 
+    // --- FUNCIONES DE PERSISTENCIA (SINCRO) ---
     async function sync() {
         if(!UID) return;
         await setDoc(doc(db, "usuarios", UID), {
             cartera: CARTERA,
-            config: { rnc: document.getElementById('dgi-rnc').value, pref: document.getElementById('dgi-pref').value, sec: document.getElementById('dgi-sec').value },
+            config: { 
+                rnc: document.getElementById('dgi-rnc').value, 
+                pref: document.getElementById('dgi-pref').value, 
+                sec: document.getElementById('dgi-sec').value 
+            },
             logo: localStorage.getItem('appLogo')
         });
     }
@@ -174,19 +230,24 @@
         if(s.exists()){
             const d = s.data();
             CARTERA = d.cartera || [];
-            if(d.config){ document.getElementById('dgi-rnc').value = d.config.rnc; document.getElementById('dgi-pref').value = d.config.pref; document.getElementById('dgi-sec').value = d.config.sec; }
-            if(d.logo){ localStorage.setItem('appLogo', d.logo); renderLogo(d.logo); }
+            if(d.config){ 
+                document.getElementById('dgi-rnc').value = d.config.rnc; 
+                document.getElementById('dgi-pref').value = d.config.pref; 
+                document.getElementById('dgi-sec').value = d.config.sec; 
+            }
+            if(d.logo){ renderLogo(d.logo); }
             renderTable();
         }
     }
 
+    // --- LÓGICA DE NEGOCIO ---
     document.getElementById('loanForm').onsubmit = async (e) => {
         e.preventDefault();
         const m = parseFloat(document.getElementById('p-monto').value);
         const t = parseFloat(document.getElementById('p-tasa').value)/100;
         const c = parseInt(document.getElementById('p-cuotas').value);
         const f = parseInt(document.getElementById('p-frec').value);
-        const cuota = (m + (m*t))/c;
+        const valorCuota = (m + (m*t))/c;
 
         CARTERA.push({
             id: Date.now(),
@@ -198,7 +259,7 @@
             frec: f==7?'Semanal':f==15?'Quincenal':'Mensual',
             plan: Array.from({length: c}, (_, i) => {
                 let d = new Date(); d.setDate(d.getDate() + (f*(i+1)));
-                return { id: i+1, fecha: d.toLocaleDateString(), monto: cuota.toFixed(2), pagado: false };
+                return { id: i+1, fecha: d.toLocaleDateString(), monto: valorCuota.toFixed(2), pagado: false };
             })
         });
         await sync(); e.target.reset(); renderTable();
@@ -207,7 +268,7 @@
     window.renderTable = (filter = "") => {
         const tb = document.querySelector('#mainTable tbody'); tb.innerHTML = '';
         CARTERA.filter(p => p.nombre.toLowerCase().includes(filter.toLowerCase())).forEach(p => {
-            tb.innerHTML += `<tr><td>${p.nombre}</td><td>$${p.monto}</td><td>${p.frec}</td><td><button onclick="openModal(${p.id})" style="background:var(--accent); color:white; padding:5px;">VER</button></td></tr>`;
+            tb.innerHTML += `<tr><td><b>${p.nombre}</b></td><td>$${p.monto.toLocaleString()}</td><td>${p.frec}</td><td><button onclick="openModal(${p.id})" style="background:var(--accent); color:white; padding:6px; width:auto;">VER</button></td></tr>`;
         });
     };
 
@@ -215,11 +276,11 @@
         const p = CARTERA.find(x => x.id === id);
         window.curr = p;
         document.getElementById('m-name').innerText = p.nombre;
-        document.getElementById('m-dir').innerText = `📍 ${p.dir || 'Sin dirección'}`;
+        document.getElementById('m-dir').innerText = `📍 ${p.dir || 'Sin dirección registrada'}`;
         const tb = document.querySelector('#m-table tbody'); tb.innerHTML = '';
         p.plan.forEach(c => {
             tb.innerHTML += `<tr><td>${c.id}</td><td>${c.fecha}</td><td>$${c.monto}</td><td>
-                ${!c.pagado ? `<button onclick="cobrar(${c.id})" style="background:var(--neon)">$</button>` : `<button onclick="factura(${c.id},'${c.monto}')">📄</button>`}
+                ${!c.pagado ? `<button onclick="cobrar(${c.id})" style="background:var(--neon); width:35px;">$</button>` : `<button onclick="factura(${c.id},'${c.monto}')" style="background:white; color:black; width:35px;">📄</button>`}
             </td></tr>`;
         });
         document.getElementById('pModal').style.display='block'; document.querySelector('.overlay').style.display='block';
@@ -233,7 +294,7 @@
 
     window.factura = (id, m) => {
         const rncE = document.getElementById('dgi-rnc').value;
-        const ncf = document.getElementById('dgi-pref').value + document.getElementById('dgi-sec').value.padStart(8,'0');
+        const ncf = document.getElementById('dgi-pref').value + document.getElementById('dgi-sec').value.toString().padStart(8,'0');
         document.getElementById('f-rnc-e').innerText = rncE;
         document.getElementById('f-ncf').innerText = ncf;
         document.getElementById('f-cli').innerText = window.curr.nombre;
@@ -247,9 +308,15 @@
         });
     };
 
+    // --- INTERFAZ ---
     window.nav = (s) => {
-        ['cobros', 'clientes', 'dgi'].forEach(x => document.getElementById('sec-'+x).style.display='none');
+        ['cobros', 'clientes', 'dgi'].forEach(x => {
+            const el = document.getElementById('sec-'+x);
+            if(el) el.style.display='none';
+        });
         document.getElementById('sec-'+s).style.display='block';
+        document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+        document.getElementById('t-'+s).classList.add('active');
         if(s==='clientes') renderClients();
     };
 
@@ -261,13 +328,25 @@
     }
 
     window.subirLogo = (ev) => {
-        const r = new FileReader(); r.onload = (e) => { localStorage.setItem('appLogo', e.target.result); renderLogo(e.target.result); sync(); };
+        const r = new FileReader(); r.onload = (e) => { 
+            localStorage.setItem('appLogo', e.target.result); 
+            renderLogo(e.target.result); 
+            sync(); 
+        };
         r.readAsDataURL(ev.target.files[0]);
     };
 
-    function renderLogo(s) { document.getElementById('logo-img').src=s; document.getElementById('logo-img').style.display='block'; document.getElementById('logo-placeholder').style.display='none'; }
+    function renderLogo(s) { 
+        document.getElementById('logo-img').src=s; 
+        document.getElementById('logo-img').style.display='block'; 
+        document.getElementById('logo-placeholder').style.display='none'; 
+    }
+    
     window.saveConfig = () => sync();
-    window.closeModal = () => { document.getElementById('pModal').style.display='none'; document.querySelector('.overlay').style.display='none'; };
+    window.closeModal = () => { 
+        document.getElementById('pModal').style.display='none'; 
+        document.querySelector('.overlay').style.display='none'; 
+    };
 </script>
 </body>
 </html>
