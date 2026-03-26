@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SmartCredit Pro Cloud - Sistema de Préstamos</title>
+    <title>SmartCredit Pro Cloud - RD</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
     <style>
         :root {
@@ -13,94 +13,98 @@
         body { font-family: 'Segoe UI', sans-serif; background: var(--bg); color: var(--text); margin: 0; padding: 10px; padding-bottom: 80px; }
         .container { max-width: 900px; margin: auto; }
         
-        /* LOGIN CLOUD */
-        #login-screen { position:fixed; top:0; left:0; width:100%; height:100%; background:var(--bg); z-index:5000; display:flex; justify-content:center; align-items:center; }
-        .login-card { background: var(--card); border: 1px solid var(--border); padding: 30px; border-radius: 15px; width: 320px; text-align: center; box-shadow: 0 10px 25px rgba(0,0,0,0.5); }
-        
         .card { background: var(--card); border: 1px solid var(--border); padding: 20px; border-radius: 12px; margin-bottom: 15px; }
         .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 10px; }
-        input, select, textarea { padding: 12px; background: #0d1117; border: 1px solid var(--border); border-radius: 8px; color: white; width: 100%; box-sizing: border-box; margin-bottom: 10px; font-size: 0.9rem; }
+        input, select, textarea { padding: 12px; background: #0d1117; border: 1px solid var(--border); border-radius: 8px; color: white; width: 100%; box-sizing: border-box; margin-bottom: 10px; }
         button { padding: 12px; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; transition: 0.3s; width: 100%; }
         .btn-main { background: var(--neon); color: #0d1117; }
         
         .tabs { display: flex; gap: 5px; margin-bottom: 15px; position: sticky; top: 0; background: var(--bg); padding: 10px 0; z-index: 100; border-bottom: 1px solid var(--border); }
-        .tab-btn { background: #30363d; color: white; flex: 1; font-size: 0.75rem; }
+        .tab-btn { background: #30363d; color: white; flex: 1; font-size: 0.7rem; position: relative; }
         .tab-btn.active { background: var(--accent); }
+        
+        /* ALERTA ROJA */
+        .badge-alert::after { content: ''; position: absolute; top: 5px; right: 5px; width: 8px; height: 8px; background: var(--danger); border-radius: 50%; box-shadow: 0 0 10px var(--danger); }
 
-        table { width: 100%; border-collapse: collapse; font-size: 0.85rem; }
+        table { width: 100%; border-collapse: collapse; font-size: 0.85rem; margin-top: 10px; }
         th, td { padding: 12px 8px; border-bottom: 1px solid var(--border); text-align: left; }
         
         .modal { display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 95%; max-width: 550px; background: var(--card); border: 1px solid var(--accent); z-index: 1000; padding: 20px; border-radius: 15px; max-height: 85vh; overflow-y: auto; }
         .overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); z-index: 900; }
-
-        #logo-img { max-height: 60px; display: none; margin: auto; margin-bottom: 10px; }
-        #factura-dgi { display: none; background: white; color: black; padding: 30px; width: 500px; font-family: 'Courier New', monospace; }
+        
+        #factura-dgi { display: none; background: white; color: black; padding: 40px; width: 600px; font-family: 'Courier New', monospace; }
     </style>
 </head>
 <body>
 
-<div id="login-screen">
-    <div class="login-card">
+<div id="login-screen" style="position:fixed; top:0; left:0; width:100%; height:100%; background:var(--bg); z-index:5000; display:flex; justify-content:center; align-items:center;">
+    <div class="card" style="width:300px; text-align:center;">
         <h2 style="color:var(--accent)">SmartCredit Pro</h2>
-        <p style="font-size:0.7rem; color:var(--text); margin-bottom:15px;">Panel de Gestión en la Nube</p>
-        <input type="email" id="auth-email" placeholder="Correo electrónico">
+        <input type="email" id="auth-email" placeholder="Correo">
         <input type="password" id="auth-pass" placeholder="Contraseña">
-        <button onclick="login()" class="btn-main">ENTRAR AL SISTEMA</button>
-        <p id="error-msg" style="color:var(--danger); font-size:0.8rem; display:none; margin-top:10px;"></p>
+        <button onclick="login()" class="btn-main">ENTRAR</button>
     </div>
 </div>
 
 <div class="container">
-    <div id="logo-area" style="text-align:center; margin-bottom:20px;" onclick="document.getElementById('logoInput').click()">
-        <img id="logo-img" src="">
-        <div id="logo-placeholder" style="border:1px dashed var(--accent); padding:10px; border-radius:8px; cursor:pointer; font-size:0.7rem;">CARGAR LOGO DE EMPRESA</div>
-        <input type="file" id="logoInput" style="display:none" accept="image/*" onchange="subirLogo(event)">
-    </div>
-
     <div class="tabs">
         <button class="tab-btn active" id="t-cobros" onclick="nav('cobros')">COBROS</button>
         <button class="tab-btn" id="t-clientes" onclick="nav('clientes')">CLIENTES</button>
-        <button class="tab-btn" id="t-dgi" onclick="nav('dgi')">⚙️ DGI</button>
-        <button class="tab-btn" onclick="salir()" style="background:var(--danger); color:white;">SALIR</button>
+        <button class="tab-btn" id="t-reportes" onclick="nav('reportes')">📊 REPORTES</button>
+        <button class="tab-btn" id="t-dgi" onclick="nav('dgi')">⚙️ CONFIG</button>
+        <button onclick="salir()" style="background:var(--danger); color:white; width:60px; font-size:10px;">OFF</button>
     </div>
 
     <div id="sec-cobros">
         <div class="card">
-            <h3>Registrar Préstamo</h3>
+            <h3>Nuevo Préstamo</h3>
             <form id="loanForm">
-                <input type="text" id="p-nombre" placeholder="Nombre Completo" required>
-                <input type="text" id="p-rnc" placeholder="RNC / Cédula">
-                <input type="tel" id="p-tel" placeholder="WhatsApp (809...)">
-                <textarea id="p-dir" placeholder="Dirección del Cliente" rows="2"></textarea>
+                <input type="text" id="p-nombre" placeholder="Nombre del Cliente" required>
+                <input type="tel" id="p-tel" placeholder="WhatsApp (Ej: 8091234567)">
+                <textarea id="p-dir" placeholder="Dirección"></textarea>
                 <div class="grid">
-                    <input type="number" id="p-monto" placeholder="Monto Capital $" required>
+                    <input type="number" id="p-monto" placeholder="Capital RD$" required>
                     <input type="number" id="p-tasa" placeholder="Interés Total %" required>
                 </div>
                 <div class="grid">
-                    <input type="number" id="p-cuotas" placeholder="Cuotas" required>
+                    <input type="number" id="p-cuotas" placeholder="Cantidad de Cuotas" required>
                     <select id="p-frec">
                         <option value="7">Semanal</option>
                         <option value="15">Quincenal</option>
                         <option value="30" selected>Mensual</option>
                     </select>
                 </div>
-                <button type="submit" class="btn-main">GENERAR PRÉSTAMO</button>
+                <button type="submit" class="btn-main">CREAR PRÉSTAMO</button>
             </form>
         </div>
         <div class="card">
-            <input type="text" placeholder="🔍 Buscar cliente..." onkeyup="renderTable(this.value)">
+            <input type="text" placeholder="🔍 Buscar por nombre..." onkeyup="renderTable(this.value)">
             <table id="mainTable">
-                <thead><tr><th>Cliente</th><th>Monto</th><th>Modalidad</th><th>Acción</th></tr></thead>
+                <thead><tr><th>Cliente</th><th>Monto</th><th>Pendiente</th><th>Acción</th></tr></thead>
                 <tbody></tbody>
             </table>
         </div>
     </div>
 
-    <div id="sec-clientes" style="display:none">
+    <div id="sec-reportes" style="display:none">
+        <div class="card" style="border: 1px solid var(--danger); background: rgba(248, 81, 73, 0.05);">
+            <h3 style="color:var(--danger)">⚠️ Clientes con Atrasos</h3>
+            <table id="morososTable">
+                <thead><tr><th>Cliente</th><th>Días</th><th>Deuda + Mora</th><th>Acción</th></tr></thead>
+                <tbody></tbody>
+            </table>
+        </div>
         <div class="card">
-            <h3>Base de Datos de Clientes</h3>
-            <table id="clientsTable">
-                <thead><tr><th>Nombre</th><th>WhatsApp</th><th>Dirección</th></tr></thead>
+            <div class="grid">
+                <div><small>Capital Cobrado</small><h2 id="rep-capital" style="color:var(--neon)">$0</h2></div>
+                <div><small>Moras Cobradas</small><h2 id="rep-mora" style="color:var(--accent)">$0</h2></div>
+            </div>
+            <button onclick="exportarCSV()" style="background:#30363d; color:white; font-size:11px; margin-top:10px;">📥 EXPORTAR EXCEL (CSV)</button>
+        </div>
+        <div class="card">
+            <h4>Historial de Pagos</h4>
+            <table id="historyTable">
+                <thead><tr><th>Fecha</th><th>Cliente</th><th>Capital</th><th>Mora</th></tr></thead>
                 <tbody></tbody>
             </table>
         </div>
@@ -108,11 +112,13 @@
 
     <div id="sec-dgi" style="display:none">
         <div class="card">
-            <h3>Configuración Fiscal (DGI)</h3>
-            <input type="text" id="dgi-rnc" placeholder="RNC de tu Negocio">
+            <h3>Configuración de Mora</h3>
             <div class="grid">
-                <input type="text" id="dgi-pref" placeholder="Prefijo NCF (Ej: B01)">
-                <input type="number" id="dgi-sec" placeholder="Secuencia Actual">
+                <select id="cfg-tipo-mora">
+                    <option value="fijo">Monto Fijo ($) por día</option>
+                    <option value="porcentaje">Porcentaje (%) por día</option>
+                </select>
+                <input type="number" id="cfg-valor-mora" placeholder="Valor (Ej: 50)">
             </div>
             <button onclick="saveConfig()" class="btn-main">GUARDAR CONFIGURACIÓN</button>
         </div>
@@ -121,232 +127,195 @@
 
 <div class="overlay" onclick="closeModal()"></div>
 <div class="modal" id="pModal">
-    <h3 id="m-name" style="margin-bottom:5px;"></h3>
-    <p id="m-dir" style="font-size:0.75rem; color:var(--accent); margin-bottom:15px;"></p>
+    <div style="display:flex; justify-content:space-between;">
+        <h3 id="m-name" style="margin:0;"></h3>
+        <button onclick="enviarRecordatorio()" style="background:#25d366; width:auto; padding:5px 10px; font-size:12px;">💬 WhatsApp</button>
+    </div>
+    <p id="m-dir" style="font-size:11px; color:var(--accent);"></p>
     <table id="m-table">
         <thead><tr><th>#</th><th>Vence</th><th>Monto</th><th>Acción</th></tr></thead>
         <tbody></tbody>
     </table>
-    <button onclick="closeModal()" style="margin-top:20px; background:var(--danger); color:white;">CERRAR</button>
+    <button onclick="closeModal()" style="margin-top:15px; background:var(--danger);">CERRAR</button>
 </div>
 
 <div id="factura-dgi">
-    <div style="text-align:center">
-        <h2 id="f-emp">RECIBO DE PAGO</h2>
-        <p>RNC: <span id="f-rnc-e"></span></p>
-        <p><strong>NCF: <span id="f-ncf"></span></strong></p>
+    <div style="text-align: center;">
+        <h2>RECIBO DE PAGO</h2>
+        <p>SmartCredit Pro Cloud RD</p>
+        <p id="f-cli" style="font-weight:bold;"></p>
+        <hr>
     </div>
-    <hr>
-    <p><strong>Fecha:</strong> <span id="f-fec"></span></p>
-    <p><strong>Cliente:</strong> <span id="f-cli"></span></p>
-    <hr>
-    <table style="width:100%; color:black; margin-top:10px;">
-        <thead><tr><th>Descripción</th><th>Total</th></tr></thead>
-        <tbody><tr><td>Abono a Préstamo</td><td id="f-mon"></td></tr></tbody>
+    <table style="width: 100%; margin: 20px 0;">
+        <tbody id="f-body"></tbody>
     </table>
-    <br><br>
-    <p style="text-align:center; font-size:0.8rem;">Copia Cliente - SmartCredit Pro Cloud</p>
+    <div style="font-size: 10px; margin-top:30px; border-top:1px solid #000; padding-top:10px;">
+        <p><strong>Términos:</strong> Este recibo avala el pago de la cuota. Los retrasos generan moras según lo pactado.</p>
+    </div>
 </div>
 
 <script type="module">
-    // --- IMPORTACIONES SDK DE FIREBASE ---
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-    import { getAnalytics } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-analytics.js";
     import { getAuth, signInWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
     import { getFirestore, doc, setDoc, getDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
-    // --- CONFIGURACIÓN DE TU APP ---
     const firebaseConfig = {
       apiKey: "AIzaSyBG8gNLEehKd_UPay-rTb5nVr2Vw3WfiHs",
       authDomain: "pres-9e035.firebaseapp.com",
       projectId: "pres-9e035",
       storageBucket: "pres-9e035.firebasestorage.app",
       messagingSenderId: "561822383782",
-      appId: "1:561822383782:web:60ea314bd3dc7a28333e67",
-      measurementId: "G-GZCQGNX3N8"
+      appId: "1:561822383782:web:60ea314bd3dc7a28333e67"
     };
 
-    // --- INICIALIZACIÓN ---
     const app = initializeApp(firebaseConfig);
-    const analytics = getAnalytics(app);
     const auth = getAuth(app);
     const db = getFirestore(app);
 
-    let CARTERA = [];
-    let UID = null;
+    let CARTERA = [], PAGOS = [], UID = null;
 
-    // --- ACCESO Y SEGURIDAD ---
+    // --- SESIÓN ---
     window.login = async () => {
-        const emailIngresado = document.getElementById('auth-email').value;
-        const passIngresada = document.getElementById('auth-pass').value;
-        const errorMsg = document.getElementById('error-msg');
-
-        // Credenciales Maestras
-        const EMAIL_M = "izarsalas.1@gmail.com";
-        const PASS_M = "J2620280.s";
-
-        try {
-            await signInWithEmailAndPassword(auth, emailIngresado, passIngresada);
-        } catch (e) {
-            // Validación Manual de respaldo
-            if (emailIngresado === EMAIL_M && passIngresada === PASS_M) {
-                document.getElementById('login-screen').style.display = 'none';
-                alert("Entrando con Usuario Maestro.");
-            } else {
-                errorMsg.innerText = "Credenciales incorrectas o error de red.";
-                errorMsg.style.display = 'block';
-            }
-        }
+        const email = document.getElementById('auth-email').value;
+        const pass = document.getElementById('auth-pass').value;
+        try { await signInWithEmailAndPassword(auth, email, pass); } catch(e){ alert("Error"); }
     };
-
     window.salir = () => signOut(auth);
-
-    onAuthStateChanged(auth, async (user) => {
-        if (user) { 
-            UID = user.uid; 
-            document.getElementById('login-screen').style.display = 'none'; 
-            await load(); 
-        } else { 
-            document.getElementById('login-screen').style.display = 'flex'; 
-        }
+    onAuthStateChanged(auth, async (u) => { 
+        if(u){ UID=u.uid; await load(); document.getElementById('login-screen').style.display='none'; }
+        else{ document.getElementById('login-screen').style.display='flex'; }
     });
 
-    // --- FUNCIONES DE PERSISTENCIA (SINCRO) ---
+    // --- BASE DE DATOS ---
     async function sync() {
         if(!UID) return;
         await setDoc(doc(db, "usuarios", UID), {
-            cartera: CARTERA,
-            config: { 
-                rnc: document.getElementById('dgi-rnc').value, 
-                pref: document.getElementById('dgi-pref').value, 
-                sec: document.getElementById('dgi-sec').value 
-            },
-            logo: localStorage.getItem('appLogo')
+            cartera: CARTERA, pagos: PAGOS,
+            config: { tipo: document.getElementById('cfg-tipo-mora').value, valor: document.getElementById('cfg-valor-mora').value }
         });
+        checkAlerts();
     }
 
     async function load() {
         const s = await getDoc(doc(db, "usuarios", UID));
         if(s.exists()){
             const d = s.data();
-            CARTERA = d.cartera || [];
+            CARTERA = d.cartera || []; PAGOS = d.pagos || [];
             if(d.config){ 
-                document.getElementById('dgi-rnc').value = d.config.rnc; 
-                document.getElementById('dgi-pref').value = d.config.pref; 
-                document.getElementById('dgi-sec').value = d.config.sec; 
+                document.getElementById('cfg-tipo-mora').value = d.config.tipo || "fijo";
+                document.getElementById('cfg-valor-mora').value = d.config.valor || 0;
             }
-            if(d.logo){ renderLogo(d.logo); }
-            renderTable();
+            renderTable(); checkAlerts();
         }
     }
 
-    // --- LÓGICA DE NEGOCIO ---
-    document.getElementById('loanForm').onsubmit = async (e) => {
-        e.preventDefault();
-        const m = parseFloat(document.getElementById('p-monto').value);
-        const t = parseFloat(document.getElementById('p-tasa').value)/100;
-        const c = parseInt(document.getElementById('p-cuotas').value);
-        const f = parseInt(document.getElementById('p-frec').value);
-        const valorCuota = (m + (m*t))/c;
+    // --- LÓGICA CORE ---
+    function calcularMora(fec, monto) {
+        const h = new Date(); const p = fec.split('/'); const v = new Date(p[2], p[1]-1, p[0]);
+        if(h > v){
+            const d = Math.floor((h - v) / 86400000);
+            const val = parseFloat(document.getElementById('cfg-valor-mora').value) || 0;
+            const res = document.getElementById('cfg-tipo-mora').value === 'fijo' ? d*val : (val/100)*monto*d;
+            return { dias: d, monto: res.toFixed(2) };
+        }
+        return { dias: 0, monto: 0 };
+    }
 
-        CARTERA.push({
-            id: Date.now(),
-            nombre: document.getElementById('p-nombre').value,
-            rnc: document.getElementById('p-rnc').value,
-            tel: document.getElementById('p-tel').value,
-            dir: document.getElementById('p-dir').value,
-            monto: m,
-            frec: f==7?'Semanal':f==15?'Quincenal':'Mensual',
-            plan: Array.from({length: c}, (_, i) => {
-                let d = new Date(); d.setDate(d.getDate() + (f*(i+1)));
-                return { id: i+1, fecha: d.toLocaleDateString(), monto: valorCuota.toFixed(2), pagado: false };
-            })
-        });
-        await sync(); e.target.reset(); renderTable();
+    function checkAlerts() {
+        let hay = false;
+        CARTERA.forEach(p => p.plan.forEach(c => { if(!c.pagado && calcularMora(c.fecha, c.monto).dias > 0) hay = true; }));
+        document.getElementById('t-reportes').classList.toggle('badge-alert', hay);
+    }
+
+    window.nav = (s) => {
+        ['cobros', 'reportes', 'dgi'].forEach(x => document.getElementById('sec-'+x).style.display='none');
+        document.getElementById('sec-'+s).style.display='block';
+        document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+        document.getElementById('t-'+s).classList.add('active');
+        if(s === 'reportes') renderReportes();
     };
 
     window.renderTable = (filter = "") => {
         const tb = document.querySelector('#mainTable tbody'); tb.innerHTML = '';
         CARTERA.filter(p => p.nombre.toLowerCase().includes(filter.toLowerCase())).forEach(p => {
-            tb.innerHTML += `<tr><td><b>${p.nombre}</b></td><td>$${p.monto.toLocaleString()}</td><td>${p.frec}</td><td><button onclick="openModal(${p.id})" style="background:var(--accent); color:white; padding:6px; width:auto;">VER</button></td></tr>`;
+            const pen = p.plan.filter(c => !c.pagado).reduce((a, b) => a + parseFloat(b.monto), 0);
+            tb.innerHTML += `<tr><td><b>${p.nombre}</b></td><td>$${p.monto}</td><td style="color:red">$${pen.toFixed(0)}</td>
+                <td><button onclick="openModal(${p.id})" style="background:var(--accent); width:auto; padding:5px;">VER</button></td></tr>`;
         });
     };
 
+    window.cobrar = async (id, mora) => {
+        const p = CARTERA.find(x => x.id === window.curr.id); const c = p.plan.find(cu => cu.id === id);
+        if(!confirm("¿Confirmar cobro?")) return;
+        PAGOS.unshift({ fecha: new Date().toLocaleDateString(), cliente: p.nombre, cap: c.monto, mora: mora });
+        c.pagado = true; c.moraPagada = mora;
+        await sync(); openModal(p.id);
+    };
+
+    window.enviarRecordatorio = () => {
+        const p = window.curr; const c = p.plan.find(cu => !cu.pagado);
+        if(!c) return;
+        const msg = `Hola ${p.nombre}, recordatorio de pago cuota #${c.id} por RD$${c.monto} vence el ${c.fecha}. Gracias.`;
+        window.open(`https://wa.me/${p.tel.replace(/\D/g,'')}?text=${encodeURIComponent(msg)}`, '_blank');
+    };
+
+    window.renderReportes = () => {
+        const tm = document.querySelector('#morososTable tbody'); tm.innerHTML = '';
+        const th = document.querySelector('#historyTable tbody'); th.innerHTML = '';
+        let tc = 0, tmora = 0;
+        
+        CARTERA.forEach(p => {
+            let dm = 0, mxa = 0;
+            p.plan.forEach(c => { if(!c.pagado){ const i = calcularMora(c.fecha, c.monto); if(i.dias > 0){ dm += parseFloat(c.monto)+parseFloat(i.monto); mxa = i.dias; } } });
+            if(mxa > 0) tm.innerHTML += `<tr><td>${p.nombre}</td><td>${mxa}d</td><td>$${dm.toFixed(0)}</td><td><button onclick="openModal(${p.id})">Ir</button></td></tr>`;
+        });
+
+        PAGOS.forEach(p => {
+            tc += parseFloat(p.cap); tmora += parseFloat(p.mora);
+            th.innerHTML += `<tr><td>${p.fecha}</td><td>${p.cliente}</td><td>$${p.cap}</td><td>$${p.mora}</td></tr>`;
+        });
+        document.getElementById('rep-capital').innerText = `$${tc.toLocaleString()}`;
+        document.getElementById('rep-mora').innerText = `$${tmora.toLocaleString()}`;
+    };
+
     window.openModal = (id) => {
-        const p = CARTERA.find(x => x.id === id);
-        window.curr = p;
+        const p = CARTERA.find(x => x.id === id); window.curr = p;
         document.getElementById('m-name').innerText = p.nombre;
-        document.getElementById('m-dir').innerText = `📍 ${p.dir || 'Sin dirección registrada'}`;
         const tb = document.querySelector('#m-table tbody'); tb.innerHTML = '';
         p.plan.forEach(c => {
-            tb.innerHTML += `<tr><td>${c.id}</td><td>${c.fecha}</td><td>$${c.monto}</td><td>
-                ${!c.pagado ? `<button onclick="cobrar(${c.id})" style="background:var(--neon); width:35px;">$</button>` : `<button onclick="factura(${c.id},'${c.monto}')" style="background:white; color:black; width:35px;">📄</button>`}
-            </td></tr>`;
+            const i = !c.pagado ? calcularMora(c.fecha, c.monto) : { monto: 0 };
+            tb.innerHTML += `<tr><td>${c.id}</td><td>${c.fecha}${i.monto>0?'<br><small style="color:red">+$'+i.monto+'</small>':''}</td><td>$${c.monto}</td>
+            <td>${!c.pagado ? `<button onclick="cobrar(${c.id}, ${i.monto})" style="background:var(--neon)">$</button>` : '✅'}</td></tr>`;
         });
         document.getElementById('pModal').style.display='block'; document.querySelector('.overlay').style.display='block';
     };
 
-    window.cobrar = async (id) => {
-        const pIdx = CARTERA.findIndex(x => x.id === window.curr.id);
-        CARTERA[pIdx].plan.find(c => c.id === id).pagado = true;
-        await sync(); openModal(window.curr.id);
-    };
-
-    window.factura = (id, m) => {
-        const rncE = document.getElementById('dgi-rnc').value;
-        const ncf = document.getElementById('dgi-pref').value + document.getElementById('dgi-sec').value.toString().padStart(8,'0');
-        document.getElementById('f-rnc-e').innerText = rncE;
-        document.getElementById('f-ncf').innerText = ncf;
-        document.getElementById('f-cli').innerText = window.curr.nombre;
-        document.getElementById('f-fec').innerText = new Date().toLocaleDateString();
-        document.getElementById('f-mon').innerText = "$"+m;
-        const el = document.getElementById('factura-dgi'); el.style.display='block';
-        html2pdf().from(el).save().then(() => { 
-            el.style.display='none'; 
-            document.getElementById('dgi-sec').value = parseInt(document.getElementById('dgi-sec').value)+1; 
-            sync(); 
+    document.getElementById('loanForm').onsubmit = async (e) => {
+        e.preventDefault();
+        const m = parseFloat(document.getElementById('p-monto').value);
+        const t = parseFloat(document.getElementById('p-tasa').value)/100;
+        const cu = parseInt(document.getElementById('p-cuotas').value);
+        const f = parseInt(document.getElementById('p-frec').value);
+        CARTERA.push({
+            id: Date.now(), nombre: document.getElementById('p-nombre').value, tel: document.getElementById('p-tel').value,
+            monto: m, frec: f==30?'Mes':f==15?'Quin':'Sem',
+            plan: Array.from({length:cu}, (_,i) => {
+                let d = new Date(); d.setDate(d.getDate()+(f*(i+1)));
+                return { id: i+1, fecha: d.toLocaleDateString(), monto: ((m+(m*t))/cu).toFixed(2), pagado: false };
+            })
         });
+        await sync(); e.target.reset(); renderTable();
     };
 
-    // --- INTERFAZ ---
-    window.nav = (s) => {
-        ['cobros', 'clientes', 'dgi'].forEach(x => {
-            const el = document.getElementById('sec-'+x);
-            if(el) el.style.display='none';
-        });
-        document.getElementById('sec-'+s).style.display='block';
-        document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
-        document.getElementById('t-'+s).classList.add('active');
-        if(s==='clientes') renderClients();
+    window.exportarCSV = () => {
+        let c = "Fecha,Cliente,Capital,Mora\n";
+        PAGOS.forEach(p => c += `${p.fecha},${p.cliente},${p.cap},${p.mora}\n`);
+        const b = new Blob([c], {type:'text/csv'}); const a = document.createElement('a');
+        a.href=URL.createObjectURL(b); a.download="Reporte.csv"; a.click();
     };
 
-    function renderClients() {
-        const tb = document.querySelector('#clientsTable tbody'); tb.innerHTML = '';
-        [...new Map(CARTERA.map(i => [i.nombre, i])).values()].forEach(c => {
-            tb.innerHTML += `<tr><td>${c.nombre}</td><td>${c.tel}</td><td>${c.dir}</td></tr>`;
-        });
-    }
-
-    window.subirLogo = (ev) => {
-        const r = new FileReader(); r.onload = (e) => { 
-            localStorage.setItem('appLogo', e.target.result); 
-            renderLogo(e.target.result); 
-            sync(); 
-        };
-        r.readAsDataURL(ev.target.files[0]);
-    };
-
-    function renderLogo(s) { 
-        document.getElementById('logo-img').src=s; 
-        document.getElementById('logo-img').style.display='block'; 
-        document.getElementById('logo-placeholder').style.display='none'; 
-    }
-    
     window.saveConfig = () => sync();
-    window.closeModal = () => { 
-        document.getElementById('pModal').style.display='none'; 
-        document.querySelector('.overlay').style.display='none'; 
-    };
+    window.closeModal = () => { document.getElementById('pModal').style.display='none'; document.querySelector('.overlay').style.display='none'; };
 </script>
 </body>
 </html>
