@@ -5,6 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>SmartCredit Pro Cloud - RD</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+    
     <style>
         :root {
             --bg: #0d1117; --card: #161b22; --accent: #58a6ff;
@@ -22,8 +24,6 @@
         .tabs { display: flex; gap: 5px; margin-bottom: 15px; position: sticky; top: 0; background: var(--bg); padding: 10px 0; z-index: 100; border-bottom: 1px solid var(--border); }
         .tab-btn { background: #30363d; color: white; flex: 1; font-size: 0.7rem; position: relative; }
         .tab-btn.active { background: var(--accent); }
-        
-        /* ALERTA ROJA */
         .badge-alert::after { content: ''; position: absolute; top: 5px; right: 5px; width: 8px; height: 8px; background: var(--danger); border-radius: 50%; box-shadow: 0 0 10px var(--danger); }
 
         table { width: 100%; border-collapse: collapse; font-size: 0.85rem; margin-top: 10px; }
@@ -60,7 +60,7 @@
             <h3>Nuevo Préstamo</h3>
             <form id="loanForm">
                 <input type="text" id="p-nombre" placeholder="Nombre del Cliente" required>
-                <input type="tel" id="p-tel" placeholder="WhatsApp (Ej: 8091234567)">
+                <input type="tel" id="p-tel" placeholder="WhatsApp (809...)">
                 <textarea id="p-dir" placeholder="Dirección"></textarea>
                 <div class="grid">
                     <input type="number" id="p-monto" placeholder="Capital RD$" required>
@@ -78,9 +78,20 @@
             </form>
         </div>
         <div class="card">
-            <input type="text" placeholder="🔍 Buscar por nombre..." onkeyup="renderTable(this.value)">
+            <input type="text" placeholder="🔍 Buscar préstamo..." onkeyup="renderTable(this.value)">
             <table id="mainTable">
                 <thead><tr><th>Cliente</th><th>Monto</th><th>Pendiente</th><th>Acción</th></tr></thead>
+                <tbody></tbody>
+            </table>
+        </div>
+    </div>
+
+    <div id="sec-clientes" style="display:none">
+        <div class="card">
+            <h3>Directorio de Contactos</h3>
+            <input type="text" id="search-cli" placeholder="🔍 Buscar cliente..." onkeyup="renderClients(this.value)">
+            <table id="clientsTable">
+                <thead><tr><th>Nombre/Dir</th><th>Teléfono</th><th>Acción</th></tr></thead>
                 <tbody></tbody>
             </table>
         </div>
@@ -127,31 +138,30 @@
 
 <div class="overlay" onclick="closeModal()"></div>
 <div class="modal" id="pModal">
-    <div style="display:flex; justify-content:space-between;">
-        <h3 id="m-name" style="margin:0;"></h3>
+    <div style="display:flex; justify-content:space-between; align-items:start;">
+        <div><h3 id="m-name" style="margin:0;"></h3><p id="m-dir" style="font-size:11px; color:var(--accent);"></p></div>
         <button onclick="enviarRecordatorio()" style="background:#25d366; width:auto; padding:5px 10px; font-size:12px;">💬 WhatsApp</button>
     </div>
-    <p id="m-dir" style="font-size:11px; color:var(--accent);"></p>
     <table id="m-table">
         <thead><tr><th>#</th><th>Vence</th><th>Monto</th><th>Acción</th></tr></thead>
         <tbody></tbody>
     </table>
-    <button onclick="closeModal()" style="margin-top:15px; background:var(--danger);">CERRAR</button>
+    
+    <button onclick="generarQRCliente()" style="margin-top:15px; background:white; color:black; font-size:11px;">📲 GENERAR QR DE BALANCE</button>
+    <div id="qr-container" style="display:none; text-align:center; margin-top:10px; padding:10px; background:white; border-radius:10px;">
+        <div id="qrcode" style="display:flex; justify-content:center;"></div>
+        <button onclick="document.getElementById('qr-container').style.display='none'" style="background:var(--danger); margin-top:5px; padding:3px; font-size:9px;">CERRAR QR</button>
+    </div>
+    <button onclick="closeModal()" style="margin-top:15px; background:var(--danger);">CERRAR VENTANA</button>
 </div>
 
-<div id="factura-dgi">
-    <div style="text-align: center;">
-        <h2>RECIBO DE PAGO</h2>
-        <p>SmartCredit Pro Cloud RD</p>
-        <p id="f-cli" style="font-weight:bold;"></p>
-        <hr>
-    </div>
-    <table style="width: 100%; margin: 20px 0;">
-        <tbody id="f-body"></tbody>
-    </table>
-    <div style="font-size: 10px; margin-top:30px; border-top:1px solid #000; padding-top:10px;">
-        <p><strong>Términos:</strong> Este recibo avala el pago de la cuota. Los retrasos generan moras según lo pactado.</p>
-    </div>
+<div id="editClientModal" class="modal" style="z-index: 2000;">
+    <h3>Editar Cliente</h3>
+    <input type="hidden" id="edit-old-name">
+    <input type="text" id="edit-name" placeholder="Nombre">
+    <input type="tel" id="edit-tel" placeholder="Teléfono">
+    <textarea id="edit-dir" placeholder="Dirección"></textarea>
+    <div class="grid"><button onclick="saveClientEdit()" class="btn-main">GUARDAR</button><button onclick="closeEditModal()" style="background:var(--danger);">CANCELAR</button></div>
 </div>
 
 <script type="module">
@@ -159,26 +169,16 @@
     import { getAuth, signInWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
     import { getFirestore, doc, setDoc, getDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
-    const firebaseConfig = {
-      apiKey: "AIzaSyBG8gNLEehKd_UPay-rTb5nVr2Vw3WfiHs",
-      authDomain: "pres-9e035.firebaseapp.com",
-      projectId: "pres-9e035",
-      storageBucket: "pres-9e035.firebasestorage.app",
-      messagingSenderId: "561822383782",
-      appId: "1:561822383782:web:60ea314bd3dc7a28333e67"
-    };
-
+    const firebaseConfig = { apiKey: "AIzaSyBG8gNLEehKd_UPay-rTb5nVr2Vw3WfiHs", authDomain: "pres-9e035.firebaseapp.com", projectId: "pres-9e035", storageBucket: "pres-9e035.firebasestorage.app", messagingSenderId: "561822383782", appId: "1:561822383782:web:60ea314bd3dc7a28333e67" };
     const app = initializeApp(firebaseConfig);
     const auth = getAuth(app);
     const db = getFirestore(app);
 
     let CARTERA = [], PAGOS = [], UID = null;
 
-    // --- SESIÓN ---
     window.login = async () => {
-        const email = document.getElementById('auth-email').value;
-        const pass = document.getElementById('auth-pass').value;
-        try { await signInWithEmailAndPassword(auth, email, pass); } catch(e){ alert("Error"); }
+        try { await signInWithEmailAndPassword(auth, document.getElementById('auth-email').value, document.getElementById('auth-pass').value); } 
+        catch(e){ alert("Error de acceso"); }
     };
     window.salir = () => signOut(auth);
     onAuthStateChanged(auth, async (u) => { 
@@ -186,7 +186,6 @@
         else{ document.getElementById('login-screen').style.display='flex'; }
     });
 
-    // --- BASE DE DATOS ---
     async function sync() {
         if(!UID) return;
         await setDoc(doc(db, "usuarios", UID), {
@@ -199,17 +198,12 @@
     async function load() {
         const s = await getDoc(doc(db, "usuarios", UID));
         if(s.exists()){
-            const d = s.data();
-            CARTERA = d.cartera || []; PAGOS = d.pagos || [];
-            if(d.config){ 
-                document.getElementById('cfg-tipo-mora').value = d.config.tipo || "fijo";
-                document.getElementById('cfg-valor-mora').value = d.config.valor || 0;
-            }
+            const d = s.data(); CARTERA = d.cartera || []; PAGOS = d.pagos || [];
+            if(d.config){ document.getElementById('cfg-tipo-mora').value = d.config.tipo; document.getElementById('cfg-valor-mora').value = d.config.valor; }
             renderTable(); checkAlerts();
         }
     }
 
-    // --- LÓGICA CORE ---
     function calcularMora(fec, monto) {
         const h = new Date(); const p = fec.split('/'); const v = new Date(p[2], p[1]-1, p[0]);
         if(h > v){
@@ -228,94 +222,103 @@
     }
 
     window.nav = (s) => {
-        ['cobros', 'reportes', 'dgi'].forEach(x => document.getElementById('sec-'+x).style.display='none');
+        ['cobros', 'clientes', 'reportes', 'dgi'].forEach(x => document.getElementById('sec-'+x).style.display='none');
         document.getElementById('sec-'+s).style.display='block';
         document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
         document.getElementById('t-'+s).classList.add('active');
         if(s === 'reportes') renderReportes();
+        if(s === 'clientes') renderClients();
     };
 
-    window.renderTable = (filter = "") => {
+    window.renderTable = (f = "") => {
         const tb = document.querySelector('#mainTable tbody'); tb.innerHTML = '';
-        CARTERA.filter(p => p.nombre.toLowerCase().includes(filter.toLowerCase())).forEach(p => {
+        CARTERA.filter(p => p.nombre.toLowerCase().includes(f.toLowerCase())).forEach(p => {
             const pen = p.plan.filter(c => !c.pagado).reduce((a, b) => a + parseFloat(b.monto), 0);
-            tb.innerHTML += `<tr><td><b>${p.nombre}</b></td><td>$${p.monto}</td><td style="color:red">$${pen.toFixed(0)}</td>
-                <td><button onclick="openModal(${p.id})" style="background:var(--accent); width:auto; padding:5px;">VER</button></td></tr>`;
+            tb.innerHTML += `<tr><td><b>${p.nombre}</b></td><td>$${p.monto}</td><td style="color:red">$${pen.toFixed(0)}</td><td><button onclick="openModal(${p.id})" style="background:var(--accent); padding:5px;">VER</button></td></tr>`;
         });
+    };
+
+    window.renderClients = (f = "") => {
+        const tb = document.querySelector('#clientsTable tbody'); tb.innerHTML = '';
+        const m = new Map(); CARTERA.forEach(p => { if(!m.has(p.nombre)) m.set(p.nombre, p); });
+        Array.from(m.values()).filter(c => c.nombre.toLowerCase().includes(f.toLowerCase())).forEach(c => {
+            tb.innerHTML += `<tr><td><b>${c.nombre}</b><br><small>${c.dir || ''}</small></td><td>${c.tel || ''}</td>
+            <td style="display:flex; gap:3px;"><button onclick="prepareEditClient('${c.nombre}')" style="font-size:9px; background:white; color:black;">Edit</button>
+            <button onclick="window.open('https://wa.me/1${c.tel.replace(/\D/g,'')}')" style="background:#25d366; font-size:9px;">WA</button></td></tr>`;
+        });
+    };
+
+    window.prepareEditClient = (n) => {
+        const p = CARTERA.find(x => x.nombre === n);
+        document.getElementById('edit-old-name').value = p.nombre; document.getElementById('edit-name').value = p.nombre;
+        document.getElementById('edit-tel').value = p.tel; document.getElementById('edit-dir').value = p.dir;
+        document.getElementById('editClientModal').style.display = 'block'; document.querySelector('.overlay').style.display = 'block';
+    };
+
+    window.saveClientEdit = async () => {
+        const old = document.getElementById('edit-old-name').value;
+        CARTERA = CARTERA.map(p => p.nombre === old ? {...p, nombre:document.getElementById('edit-name').value, tel:document.getElementById('edit-tel').value, dir:document.getElementById('edit-dir').value} : p);
+        await sync(); closeEditModal(); renderClients(); renderTable();
     };
 
     window.cobrar = async (id, mora) => {
         const p = CARTERA.find(x => x.id === window.curr.id); const c = p.plan.find(cu => cu.id === id);
-        if(!confirm("¿Confirmar cobro?")) return;
+        if(!confirm("¿Procesar pago?")) return;
         PAGOS.unshift({ fecha: new Date().toLocaleDateString(), cliente: p.nombre, cap: c.monto, mora: mora });
-        c.pagado = true; c.moraPagada = mora;
-        await sync(); openModal(p.id);
+        c.pagado = true; c.moraPagada = mora; await sync(); openModal(p.id);
+    };
+
+    window.generarQRCliente = () => {
+        const qrDiv = document.getElementById("qrcode"); qrDiv.innerHTML = "";
+        new QRCode(qrDiv, { text: `https://consulta.tuapi.com?id=${window.curr.id}`, width: 120, height: 120 });
+        document.getElementById('qr-container').style.display = 'block';
     };
 
     window.enviarRecordatorio = () => {
         const p = window.curr; const c = p.plan.find(cu => !cu.pagado);
         if(!c) return;
-        const msg = `Hola ${p.nombre}, recordatorio de pago cuota #${c.id} por RD$${c.monto} vence el ${c.fecha}. Gracias.`;
-        window.open(`https://wa.me/${p.tel.replace(/\D/g,'')}?text=${encodeURIComponent(msg)}`, '_blank');
+        window.open(`https://wa.me/1${p.tel.replace(/\D/g,'')}?text=${encodeURIComponent('Hola '+p.nombre+', recordamos cuota #'+c.id+' de $'+c.monto+' vence el '+c.fecha)}`, '_blank');
     };
 
     window.renderReportes = () => {
         const tm = document.querySelector('#morososTable tbody'); tm.innerHTML = '';
         const th = document.querySelector('#historyTable tbody'); th.innerHTML = '';
         let tc = 0, tmora = 0;
-        
         CARTERA.forEach(p => {
-            let dm = 0, mxa = 0;
-            p.plan.forEach(c => { if(!c.pagado){ const i = calcularMora(c.fecha, c.monto); if(i.dias > 0){ dm += parseFloat(c.monto)+parseFloat(i.monto); mxa = i.dias; } } });
-            if(mxa > 0) tm.innerHTML += `<tr><td>${p.nombre}</td><td>${mxa}d</td><td>$${dm.toFixed(0)}</td><td><button onclick="openModal(${p.id})">Ir</button></td></tr>`;
+            let dm = 0, ma = 0;
+            p.plan.forEach(c => { if(!c.pagado){ const i = calcularMora(c.fecha, c.monto); if(i.dias > 0){ dm += parseFloat(c.monto)+parseFloat(i.monto); ma = i.dias; } } });
+            if(ma > 0) tm.innerHTML += `<tr><td>${p.nombre}</td><td>${ma}d</td><td>$${dm.toFixed(0)}</td><td><button onclick="openModal(${p.id})">Ir</button></td></tr>`;
         });
-
-        PAGOS.forEach(p => {
-            tc += parseFloat(p.cap); tmora += parseFloat(p.mora);
-            th.innerHTML += `<tr><td>${p.fecha}</td><td>${p.cliente}</td><td>$${p.cap}</td><td>$${p.mora}</td></tr>`;
-        });
-        document.getElementById('rep-capital').innerText = `$${tc.toLocaleString()}`;
-        document.getElementById('rep-mora').innerText = `$${tmora.toLocaleString()}`;
+        PAGOS.forEach(p => { tc += parseFloat(p.cap); tmora += parseFloat(p.mora); th.innerHTML += `<tr><td>${p.fecha}</td><td>${p.cliente}</td><td>$${p.cap}</td><td>$${p.mora}</td></tr>`; });
+        document.getElementById('rep-capital').innerText = `$${tc.toLocaleString()}`; document.getElementById('rep-mora').innerText = `$${tmora.toLocaleString()}`;
     };
 
     window.openModal = (id) => {
         const p = CARTERA.find(x => x.id === id); window.curr = p;
-        document.getElementById('m-name').innerText = p.nombre;
+        document.getElementById('m-name').innerText = p.nombre; document.getElementById('m-dir').innerText = p.dir || '';
         const tb = document.querySelector('#m-table tbody'); tb.innerHTML = '';
         p.plan.forEach(c => {
             const i = !c.pagado ? calcularMora(c.fecha, c.monto) : { monto: 0 };
-            tb.innerHTML += `<tr><td>${c.id}</td><td>${c.fecha}${i.monto>0?'<br><small style="color:red">+$'+i.monto+'</small>':''}</td><td>$${c.monto}</td>
-            <td>${!c.pagado ? `<button onclick="cobrar(${c.id}, ${i.monto})" style="background:var(--neon)">$</button>` : '✅'}</td></tr>`;
+            tb.innerHTML += `<tr><td>${c.id}</td><td>${c.fecha}${i.monto>0?'<br><small style="color:red">+$'+i.monto+'</small>':''}</td><td>$${c.monto}</td><td>${!c.pagado ? `<button onclick="cobrar(${c.id}, ${i.monto})" style="background:var(--neon)">$</button>` : '✅'}</td></tr>`;
         });
         document.getElementById('pModal').style.display='block'; document.querySelector('.overlay').style.display='block';
     };
 
     document.getElementById('loanForm').onsubmit = async (e) => {
         e.preventDefault();
-        const m = parseFloat(document.getElementById('p-monto').value);
-        const t = parseFloat(document.getElementById('p-tasa').value)/100;
-        const cu = parseInt(document.getElementById('p-cuotas').value);
-        const f = parseInt(document.getElementById('p-frec').value);
-        CARTERA.push({
-            id: Date.now(), nombre: document.getElementById('p-nombre').value, tel: document.getElementById('p-tel').value,
-            monto: m, frec: f==30?'Mes':f==15?'Quin':'Sem',
-            plan: Array.from({length:cu}, (_,i) => {
-                let d = new Date(); d.setDate(d.getDate()+(f*(i+1)));
-                return { id: i+1, fecha: d.toLocaleDateString(), monto: ((m+(m*t))/cu).toFixed(2), pagado: false };
-            })
-        });
+        const m = parseFloat(document.getElementById('p-monto').value), t = parseFloat(document.getElementById('p-tasa').value)/100, cu = parseInt(document.getElementById('p-cuotas').value), f = parseInt(document.getElementById('p-frec').value);
+        CARTERA.push({ id: Date.now(), nombre: document.getElementById('p-nombre').value, tel: document.getElementById('p-tel').value, dir: document.getElementById('p-dir').value, monto: m, plan: Array.from({length:cu}, (_,i) => { let d = new Date(); d.setDate(d.getDate()+(f*(i+1))); return { id: i+1, fecha: d.toLocaleDateString(), monto: ((m+(m*t))/cu).toFixed(2), pagado: false }; }) });
         await sync(); e.target.reset(); renderTable();
     };
 
     window.exportarCSV = () => {
-        let c = "Fecha,Cliente,Capital,Mora\n";
-        PAGOS.forEach(p => c += `${p.fecha},${p.cliente},${p.cap},${p.mora}\n`);
-        const b = new Blob([c], {type:'text/csv'}); const a = document.createElement('a');
-        a.href=URL.createObjectURL(b); a.download="Reporte.csv"; a.click();
+        let c = "Fecha,Cliente,Capital,Mora\n"; PAGOS.forEach(p => c += `${p.fecha},${p.cliente},${p.cap},${p.mora}\n`);
+        const a = document.createElement('a'); a.href=URL.createObjectURL(new Blob([c], {type:'text/csv'})); a.download="Reporte.csv"; a.click();
     };
 
     window.saveConfig = () => sync();
-    window.closeModal = () => { document.getElementById('pModal').style.display='none'; document.querySelector('.overlay').style.display='none'; };
+    window.closeModal = () => { document.getElementById('pModal').style.display='none'; document.querySelector('.overlay').style.display='none'; document.getElementById('qr-container').style.display='none'; };
+    window.closeEditModal = () => { document.getElementById('editClientModal').style.display='none'; document.querySelector('.overlay').style.display='none'; };
 </script>
 </body>
 </html>
