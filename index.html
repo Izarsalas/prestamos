@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SmartCredit Pro Cloud - RD</title>
+    <title>SmartCredit Pro Cloud - RD Edition</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
     
@@ -31,8 +31,6 @@
         
         .modal { display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 95%; max-width: 550px; background: var(--card); border: 1px solid var(--accent); z-index: 1000; padding: 20px; border-radius: 15px; max-height: 85vh; overflow-y: auto; }
         .overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); z-index: 900; }
-        
-        #factura-dgi { display: none; background: white; color: black; padding: 40px; width: 600px; font-family: 'Courier New', monospace; }
     </style>
 </head>
 <body>
@@ -42,7 +40,7 @@
         <h2 style="color:var(--accent)">SmartCredit Pro</h2>
         <input type="email" id="auth-email" placeholder="Correo">
         <input type="password" id="auth-pass" placeholder="Contraseña">
-        <button onclick="login()" class="btn-main">ENTRAR</button>
+        <button onclick="login()" class="btn-main">ENTRAR AL SISTEMA</button>
     </div>
 </div>
 
@@ -51,17 +49,17 @@
         <button class="tab-btn active" id="t-cobros" onclick="nav('cobros')">COBROS</button>
         <button class="tab-btn" id="t-clientes" onclick="nav('clientes')">CLIENTES</button>
         <button class="tab-btn" id="t-reportes" onclick="nav('reportes')">📊 REPORTES</button>
-        <button class="tab-btn" id="t-dgi" onclick="nav('dgi')">⚙️ CONFIG</button>
-        <button onclick="salir()" style="background:var(--danger); color:white; width:60px; font-size:10px;">OFF</button>
+        <button class="tab-btn" id="t-dgi" onclick="nav('dgi')">⚙️ HARDWARE</button>
+        <button onclick="salir()" style="background:var(--danger); color:white; width:60px; font-size:10px;">SALIR</button>
     </div>
 
     <div id="sec-cobros">
         <div class="card">
             <h3>Nuevo Préstamo</h3>
             <form id="loanForm">
-                <input type="text" id="p-nombre" placeholder="Nombre del Cliente" required>
+                <input type="text" id="p-nombre" placeholder="Nombre Completo" required>
                 <input type="tel" id="p-tel" placeholder="WhatsApp (809...)">
-                <textarea id="p-dir" placeholder="Dirección"></textarea>
+                <textarea id="p-dir" placeholder="Dirección del Cliente"></textarea>
                 <div class="grid">
                     <input type="number" id="p-monto" placeholder="Capital RD$" required>
                     <input type="number" id="p-tasa" placeholder="Interés Total %" required>
@@ -74,11 +72,11 @@
                         <option value="30" selected>Mensual</option>
                     </select>
                 </div>
-                <button type="submit" class="btn-main">CREAR PRÉSTAMO</button>
+                <button type="submit" class="btn-main">CREAR PRÉSTAMO Y PLAN</button>
             </form>
         </div>
         <div class="card">
-            <input type="text" placeholder="🔍 Buscar préstamo..." onkeyup="renderTable(this.value)">
+            <input type="text" placeholder="🔍 Buscar por nombre de cliente..." onkeyup="renderTable(this.value)">
             <table id="mainTable">
                 <thead><tr><th>Cliente</th><th>Monto</th><th>Pendiente</th><th>Acción</th></tr></thead>
                 <tbody></tbody>
@@ -89,7 +87,7 @@
     <div id="sec-clientes" style="display:none">
         <div class="card">
             <h3>Directorio de Contactos</h3>
-            <input type="text" id="search-cli" placeholder="🔍 Buscar cliente..." onkeyup="renderClients(this.value)">
+            <input type="text" id="search-cli" placeholder="🔍 Filtrar por nombre o teléfono..." onkeyup="renderClients(this.value)">
             <table id="clientsTable">
                 <thead><tr><th>Nombre/Dir</th><th>Teléfono</th><th>Acción</th></tr></thead>
                 <tbody></tbody>
@@ -98,26 +96,38 @@
     </div>
 
     <div id="sec-reportes" style="display:none">
+        <div class="card" style="border: 1px solid var(--neon); background: rgba(57, 211, 83, 0.05);">
+            <div style="display:flex; justify-content:space-between; align-items:center;">
+                <h3 style="color:var(--neon); margin:0;">💰 Cuadre de Caja Hoy</h3>
+                <button onclick="imprimirCierre()" style="background:white; color:black; width:auto; padding:5px 10px; font-size:11px;">🖨️ IMPRIMIR CIERRE</button>
+            </div>
+            <div class="grid" style="margin-top:15px;">
+                <div style="text-align:center; border-right:1px solid var(--border);">
+                    <small>Efectivo Total</small>
+                    <h2 id="cierre-hoy" style="margin:5px 0;">$0</h2>
+                </div>
+                <div style="text-align:center;">
+                    <small>Recibos Cobrados</small>
+                    <h2 id="cantidad-pagos" style="margin:5px 0;">0</h2>
+                </div>
+            </div>
+        </div>
+
         <div class="card" style="border: 1px solid var(--danger); background: rgba(248, 81, 73, 0.05);">
-            <h3 style="color:var(--danger)">⚠️ Clientes con Atrasos</h3>
+            <h3 style="color:var(--danger)">⚠️ Alerta de Atrasos</h3>
             <table id="morososTable">
                 <thead><tr><th>Cliente</th><th>Días</th><th>Deuda + Mora</th><th>Acción</th></tr></thead>
                 <tbody></tbody>
             </table>
         </div>
+
         <div class="card">
-            <div class="grid">
-                <div><small>Capital Cobrado</small><h2 id="rep-capital" style="color:var(--neon)">$0</h2></div>
-                <div><small>Moras Cobradas</small><h2 id="rep-mora" style="color:var(--accent)">$0</h2></div>
-            </div>
-            <button onclick="exportarCSV()" style="background:#30363d; color:white; font-size:11px; margin-top:10px;">📥 EXPORTAR EXCEL (CSV)</button>
-        </div>
-        <div class="card">
-            <h4>Historial de Pagos</h4>
+            <h4>Historial de Operaciones</h4>
             <table id="historyTable">
                 <thead><tr><th>Fecha</th><th>Cliente</th><th>Capital</th><th>Mora</th></tr></thead>
                 <tbody></tbody>
             </table>
+            <button onclick="exportarCSV()" style="background:#30363d; color:white; font-size:11px; margin-top:10px;">📥 DESCARGAR EXCEL</button>
         </div>
     </div>
 
@@ -131,12 +141,20 @@
                 </select>
                 <input type="number" id="cfg-valor-mora" placeholder="Valor (Ej: 50)">
             </div>
-            <button onclick="saveConfig()" class="btn-main">GUARDAR CONFIGURACIÓN</button>
+        </div>
+        <div class="card">
+            <h3>Ajustes de Hardware</h3>
+            <input type="text" id="dgi-rnc" placeholder="RNC de la Empresa">
+            <label style="display:flex; align-items:center; gap:10px; font-size:0.8rem; margin-top:10px;">
+                <input type="checkbox" id="cfg-abrir-caja" style="width:auto; margin:0;" checked> Abrir gaveta automáticamente al cobrar
+            </label>
+            <button onclick="saveConfig()" class="btn-main" style="margin-top:15px;">GUARDAR CAMBIOS</button>
         </div>
     </div>
 </div>
 
 <div class="overlay" onclick="closeModal()"></div>
+
 <div class="modal" id="pModal">
     <div style="display:flex; justify-content:space-between; align-items:start;">
         <div><h3 id="m-name" style="margin:0;"></h3><p id="m-dir" style="font-size:11px; color:var(--accent);"></p></div>
@@ -147,21 +165,21 @@
         <tbody></tbody>
     </table>
     
-    <button onclick="generarQRCliente()" style="margin-top:15px; background:white; color:black; font-size:11px;">📲 GENERAR QR DE BALANCE</button>
+    <button onclick="generarQRCliente()" style="margin-top:15px; background:white; color:black; font-size:11px;">📲 GENERAR QR PARA CLIENTE</button>
     <div id="qr-container" style="display:none; text-align:center; margin-top:10px; padding:10px; background:white; border-radius:10px;">
         <div id="qrcode" style="display:flex; justify-content:center;"></div>
-        <button onclick="document.getElementById('qr-container').style.display='none'" style="background:var(--danger); margin-top:5px; padding:3px; font-size:9px;">CERRAR QR</button>
+        <button onclick="document.getElementById('qr-container').style.display='none'" style="background:var(--danger); margin-top:5px; padding:3px; font-size:9px;">OCULTAR QR</button>
     </div>
-    <button onclick="closeModal()" style="margin-top:15px; background:var(--danger);">CERRAR VENTANA</button>
+    <button onclick="closeModal()" style="margin-top:15px; background:var(--danger);">CERRAR</button>
 </div>
 
 <div id="editClientModal" class="modal" style="z-index: 2000;">
-    <h3>Editar Cliente</h3>
+    <h3>Editar Datos del Cliente</h3>
     <input type="hidden" id="edit-old-name">
     <input type="text" id="edit-name" placeholder="Nombre">
     <input type="tel" id="edit-tel" placeholder="Teléfono">
     <textarea id="edit-dir" placeholder="Dirección"></textarea>
-    <div class="grid"><button onclick="saveClientEdit()" class="btn-main">GUARDAR</button><button onclick="closeEditModal()" style="background:var(--danger);">CANCELAR</button></div>
+    <div class="grid"><button onclick="saveClientEdit()" class="btn-main">ACTUALIZAR</button><button onclick="closeEditModal()" style="background:var(--danger);">CANCELAR</button></div>
 </div>
 
 <script type="module">
@@ -169,6 +187,7 @@
     import { getAuth, signInWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
     import { getFirestore, doc, setDoc, getDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
+    // CONFIGURACIÓN FIREBASE
     const firebaseConfig = { apiKey: "AIzaSyBG8gNLEehKd_UPay-rTb5nVr2Vw3WfiHs", authDomain: "pres-9e035.firebaseapp.com", projectId: "pres-9e035", storageBucket: "pres-9e035.firebasestorage.app", messagingSenderId: "561822383782", appId: "1:561822383782:web:60ea314bd3dc7a28333e67" };
     const app = initializeApp(firebaseConfig);
     const auth = getAuth(app);
@@ -176,9 +195,10 @@
 
     let CARTERA = [], PAGOS = [], UID = null;
 
+    // --- AUTENTICACIÓN ---
     window.login = async () => {
         try { await signInWithEmailAndPassword(auth, document.getElementById('auth-email').value, document.getElementById('auth-pass').value); } 
-        catch(e){ alert("Error de acceso"); }
+        catch(e){ alert("Error: Verifica correo/contraseña"); }
     };
     window.salir = () => signOut(auth);
     onAuthStateChanged(auth, async (u) => { 
@@ -186,11 +206,17 @@
         else{ document.getElementById('login-screen').style.display='flex'; }
     });
 
+    // --- SINCRONIZACIÓN Y CARGA ---
     async function sync() {
         if(!UID) return;
         await setDoc(doc(db, "usuarios", UID), {
             cartera: CARTERA, pagos: PAGOS,
-            config: { tipo: document.getElementById('cfg-tipo-mora').value, valor: document.getElementById('cfg-valor-mora').value }
+            config: { 
+                tipo: document.getElementById('cfg-tipo-mora').value, 
+                valor: document.getElementById('cfg-valor-mora').value,
+                rnc: document.getElementById('dgi-rnc').value,
+                caja: document.getElementById('cfg-abrir-caja').checked
+            }
         });
         checkAlerts();
     }
@@ -199,18 +225,24 @@
         const s = await getDoc(doc(db, "usuarios", UID));
         if(s.exists()){
             const d = s.data(); CARTERA = d.cartera || []; PAGOS = d.pagos || [];
-            if(d.config){ document.getElementById('cfg-tipo-mora').value = d.config.tipo; document.getElementById('cfg-valor-mora').value = d.config.valor; }
+            if(d.config){ 
+                document.getElementById('cfg-tipo-mora').value = d.config.tipo; 
+                document.getElementById('cfg-valor-mora').value = d.config.valor;
+                document.getElementById('dgi-rnc').value = d.config.rnc || '';
+                document.getElementById('cfg-abrir-caja').checked = d.config.caja !== undefined ? d.config.caja : true;
+            }
             renderTable(); checkAlerts();
         }
     }
 
+    // --- LÓGICA DE NEGOCIO ---
     function calcularMora(fec, monto) {
-        const h = new Date(); const p = fec.split('/'); const v = new Date(p[2], p[1]-1, p[0]);
-        if(h > v){
-            const d = Math.floor((h - v) / 86400000);
+        const hoy = new Date(); const p = fec.split('/'); const venc = new Date(p[2], p[1]-1, p[0]);
+        if(hoy > venc){
+            const dias = Math.floor((hoy - venc) / 86400000);
             const val = parseFloat(document.getElementById('cfg-valor-mora').value) || 0;
-            const res = document.getElementById('cfg-tipo-mora').value === 'fijo' ? d*val : (val/100)*monto*d;
-            return { dias: d, monto: res.toFixed(2) };
+            const res = document.getElementById('cfg-tipo-mora').value === 'fijo' ? dias*val : (val/100)*monto*dias;
+            return { dias: dias, monto: res.toFixed(2) };
         }
         return { dias: 0, monto: 0 };
     }
@@ -221,6 +253,53 @@
         document.getElementById('t-reportes').classList.toggle('badge-alert', hay);
     }
 
+    // --- HARDWARE E IMPRESIÓN ---
+    window.imprimirTicket = (idCuota, monto, mora) => {
+        const rnc = document.getElementById('dgi-rnc').value || "REGISTRO N/A";
+        const total = (parseFloat(monto) + parseFloat(mora)).toFixed(2);
+        const pWin = window.open('', '_blank', 'width=350,height=600');
+        pWin.document.write(`
+            <html><head><style>body{font-family:'Courier New';width:260px;padding:10px;font-size:12px;}.tc{text-align:center;}.tr{text-align:right;}</style></head>
+            <body>
+                <div class="tc"><h3 style="margin:0;">SMARTCREDIT PRO</h3><p>RNC: ${rnc}</p><hr><p>RECIBO DE PAGO</p><p>${new Date().toLocaleString()}</p></div>
+                <p>CLIENTE: ${window.curr.nombre}</p><hr>
+                <table style="width:100%">
+                    <tr><td>Cuota #${idCuota}</td><td class="tr">$${parseFloat(monto).toLocaleString()}</td></tr>
+                    ${mora > 0 ? `<tr><td>Mora</td><td class="tr">$${parseFloat(mora).toLocaleString()}</td></tr>` : ''}
+                    <tr style="font-weight:bold"><td>TOTAL RD$</td><td class="tr">$${total}</td></tr>
+                </table><hr>
+                <div class="tc" style="margin-top:20px;"><p>_______________________</p><p>Firma / Sello</p></div>
+            </body></html>
+        `);
+        pWin.document.close();
+        pWin.focus();
+        setTimeout(() => { pWin.print(); pWin.close(); }, 500);
+    };
+
+    window.imprimirCierre = () => {
+        const datos = actualizarCierreCaja();
+        const pWin = window.open('', '_blank', 'width=350,height=600');
+        pWin.document.write(`
+            <html><body style="font-family:'Courier New';width:260px;padding:10px;font-size:12px;">
+                <div style="text-align:center;"><h3>CIERRE DE CAJA</h3><p>${new Date().toLocaleString()}</p><hr></div>
+                <p>PAGOS DEL DIA: ${datos.cantidad}</p><hr>
+                <h2 style="text-align:center;">TOTAL RD$ ${datos.total.toLocaleString()}</h2><hr>
+                <div style="margin-top:30px;text-align:center;"><p>_______________________</p><p>Recibido Conforme</p></div>
+            </body></html>
+        `);
+        pWin.document.close(); pWin.print(); pWin.close();
+    };
+
+    window.actualizarCierreCaja = () => {
+        const hoy = new Date().toLocaleDateString();
+        const pagosHoy = PAGOS.filter(p => p.fecha === hoy);
+        const total = pagosHoy.reduce((a, b) => a + parseFloat(b.cap) + parseFloat(b.mora), 0);
+        document.getElementById('cierre-hoy').innerText = `RD$${total.toLocaleString()}`;
+        document.getElementById('cantidad-pagos').innerText = pagosHoy.length;
+        return { total, cantidad: pagosHoy.length };
+    };
+
+    // --- NAVEGACIÓN Y RENDER ---
     window.nav = (s) => {
         ['cobros', 'clientes', 'reportes', 'dgi'].forEach(x => document.getElementById('sec-'+x).style.display='none');
         document.getElementById('sec-'+s).style.display='block';
@@ -242,10 +321,42 @@
         const tb = document.querySelector('#clientsTable tbody'); tb.innerHTML = '';
         const m = new Map(); CARTERA.forEach(p => { if(!m.has(p.nombre)) m.set(p.nombre, p); });
         Array.from(m.values()).filter(c => c.nombre.toLowerCase().includes(f.toLowerCase())).forEach(c => {
-            tb.innerHTML += `<tr><td><b>${c.nombre}</b><br><small>${c.dir || ''}</small></td><td>${c.tel || ''}</td>
-            <td style="display:flex; gap:3px;"><button onclick="prepareEditClient('${c.nombre}')" style="font-size:9px; background:white; color:black;">Edit</button>
-            <button onclick="window.open('https://wa.me/1${c.tel.replace(/\D/g,'')}')" style="background:#25d366; font-size:9px;">WA</button></td></tr>`;
+            tb.innerHTML += `<tr><td><b>${c.nombre}</b><br><small>${c.dir || ''}</small></td><td>${c.tel || ''}</td><td style="display:flex; gap:3px;"><button onclick="prepareEditClient('${c.nombre}')" style="font-size:9px; background:white; color:black;">Edit</button><button onclick="window.open('https://wa.me/1${c.tel.replace(/\D/g,'')}')" style="background:#25d366; font-size:9px;">WA</button></td></tr>`;
         });
+    };
+
+    window.renderReportes = () => {
+        const tm = document.querySelector('#morososTable tbody'); tm.innerHTML = '';
+        const th = document.querySelector('#historyTable tbody'); th.innerHTML = '';
+        CARTERA.forEach(p => {
+            let dm = 0, ma = 0;
+            p.plan.forEach(c => { if(!c.pagado){ const i = calcularMora(c.fecha, c.monto); if(i.dias > 0){ dm += parseFloat(c.monto)+parseFloat(i.monto); ma = i.dias; } } });
+            if(ma > 0) tm.innerHTML += `<tr><td>${p.nombre}</td><td>${ma}d</td><td>$${dm.toFixed(0)}</td><td><button onclick="openModal(${p.id})">Ir</button></td></tr>`;
+        });
+        PAGOS.forEach(p => { th.innerHTML += `<tr><td>${p.fecha}</td><td>${p.cliente}</td><td>$${p.cap}</td><td>$${p.mora}</td></tr>`; });
+        actualizarCierreCaja();
+    };
+
+    // --- ACCIONES ---
+    window.cobrar = async (id, mora) => {
+        const p = CARTERA.find(x => x.id === window.curr.id); const c = p.plan.find(cu => cu.id === id);
+        if(!confirm("¿Procesar pago y abrir caja?")) return;
+        PAGOS.unshift({ fecha: new Date().toLocaleDateString(), cliente: p.nombre, cap: c.monto, mora: mora });
+        c.pagado = true; c.moraPagada = mora; await sync();
+        window.imprimirTicket(id, c.monto, mora);
+        openModal(p.id);
+    };
+
+    window.generarQRCliente = () => {
+        const qrDiv = document.getElementById("qrcode"); qrDiv.innerHTML = "";
+        new QRCode(qrDiv, { text: `https://consulta.tuapi.com?id=${window.curr.id}`, width: 120, height: 120 });
+        document.getElementById('qr-container').style.display = 'block';
+    };
+
+    window.enviarRecordatorio = () => {
+        const p = window.curr; const c = p.plan.find(cu => !cu.pagado);
+        if(!c) return;
+        window.open(`https://wa.me/1${p.tel.replace(/\D/g,'')}?text=${encodeURIComponent('Hola '+p.nombre+', recordamos cuota #'+c.id+' de $'+c.monto+' vence el '+c.fecha)}`, '_blank');
     };
 
     window.prepareEditClient = (n) => {
@@ -261,41 +372,9 @@
         await sync(); closeEditModal(); renderClients(); renderTable();
     };
 
-    window.cobrar = async (id, mora) => {
-        const p = CARTERA.find(x => x.id === window.curr.id); const c = p.plan.find(cu => cu.id === id);
-        if(!confirm("¿Procesar pago?")) return;
-        PAGOS.unshift({ fecha: new Date().toLocaleDateString(), cliente: p.nombre, cap: c.monto, mora: mora });
-        c.pagado = true; c.moraPagada = mora; await sync(); openModal(p.id);
-    };
-
-    window.generarQRCliente = () => {
-        const qrDiv = document.getElementById("qrcode"); qrDiv.innerHTML = "";
-        new QRCode(qrDiv, { text: `https://consulta.tuapi.com?id=${window.curr.id}`, width: 120, height: 120 });
-        document.getElementById('qr-container').style.display = 'block';
-    };
-
-    window.enviarRecordatorio = () => {
-        const p = window.curr; const c = p.plan.find(cu => !cu.pagado);
-        if(!c) return;
-        window.open(`https://wa.me/1${p.tel.replace(/\D/g,'')}?text=${encodeURIComponent('Hola '+p.nombre+', recordamos cuota #'+c.id+' de $'+c.monto+' vence el '+c.fecha)}`, '_blank');
-    };
-
-    window.renderReportes = () => {
-        const tm = document.querySelector('#morososTable tbody'); tm.innerHTML = '';
-        const th = document.querySelector('#historyTable tbody'); th.innerHTML = '';
-        let tc = 0, tmora = 0;
-        CARTERA.forEach(p => {
-            let dm = 0, ma = 0;
-            p.plan.forEach(c => { if(!c.pagado){ const i = calcularMora(c.fecha, c.monto); if(i.dias > 0){ dm += parseFloat(c.monto)+parseFloat(i.monto); ma = i.dias; } } });
-            if(ma > 0) tm.innerHTML += `<tr><td>${p.nombre}</td><td>${ma}d</td><td>$${dm.toFixed(0)}</td><td><button onclick="openModal(${p.id})">Ir</button></td></tr>`;
-        });
-        PAGOS.forEach(p => { tc += parseFloat(p.cap); tmora += parseFloat(p.mora); th.innerHTML += `<tr><td>${p.fecha}</td><td>${p.cliente}</td><td>$${p.cap}</td><td>$${p.mora}</td></tr>`; });
-        document.getElementById('rep-capital').innerText = `$${tc.toLocaleString()}`; document.getElementById('rep-mora').innerText = `$${tmora.toLocaleString()}`;
-    };
-
     window.openModal = (id) => {
         const p = CARTERA.find(x => x.id === id); window.curr = p;
-        document.getElementById('m-name').innerText = p.nombre; document.getElementById('m-dir').innerText = p.dir || '';
+        document.getElementById('m-name').innerText = p.nombre; document.getElementById('m-dir').innerText = p.dir || 'Samaná, RD';
         const tb = document.querySelector('#m-table tbody'); tb.innerHTML = '';
         p.plan.forEach(c => {
             const i = !c.pagado ? calcularMora(c.fecha, c.monto) : { monto: 0 };
@@ -313,7 +392,7 @@
 
     window.exportarCSV = () => {
         let c = "Fecha,Cliente,Capital,Mora\n"; PAGOS.forEach(p => c += `${p.fecha},${p.cliente},${p.cap},${p.mora}\n`);
-        const a = document.createElement('a'); a.href=URL.createObjectURL(new Blob([c], {type:'text/csv'})); a.download="Reporte.csv"; a.click();
+        const a = document.createElement('a'); a.href=URL.createObjectURL(new Blob([c], {type:'text/csv'})); a.download="Cuadre_SmartCredit.csv"; a.click();
     };
 
     window.saveConfig = () => sync();
