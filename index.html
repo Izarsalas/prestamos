@@ -3,183 +3,124 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SmartCredit Pro Cloud - RD Edition</title>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
-    
+    <title>SmartCredit Pro - Enterprise v4 (Control Total)</title>
     <style>
         :root {
             --bg: #0d1117; --card: #161b22; --accent: #58a6ff;
-            --neon: #39d353; --border: #30363d; --text: #c9d1d9; --danger: #f85149;
+            --neon: #39d353; --border: #30363d; --text: #c9d1d9; --danger: #f85149; --warning: #f1e05a;
         }
         body { font-family: 'Segoe UI', sans-serif; background: var(--bg); color: var(--text); margin: 0; padding: 10px; padding-bottom: 80px; }
         .container { max-width: 900px; margin: auto; }
-        
         .card { background: var(--card); border: 1px solid var(--border); padding: 20px; border-radius: 12px; margin-bottom: 15px; }
         .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 10px; }
         input, select, textarea { padding: 12px; background: #0d1117; border: 1px solid var(--border); border-radius: 8px; color: white; width: 100%; box-sizing: border-box; margin-bottom: 10px; }
         button { padding: 12px; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; transition: 0.3s; width: 100%; }
         .btn-main { background: var(--neon); color: #0d1117; }
-        
         .tabs { display: flex; gap: 5px; margin-bottom: 15px; position: sticky; top: 0; background: var(--bg); padding: 10px 0; z-index: 100; border-bottom: 1px solid var(--border); }
-        .tab-btn { background: #30363d; color: white; flex: 1; font-size: 0.7rem; position: relative; }
+        .tab-btn { background: #30363d; color: white; flex: 1; font-size: 0.7rem; }
         .tab-btn.active { background: var(--accent); }
-        .badge-alert::after { content: ''; position: absolute; top: 5px; right: 5px; width: 8px; height: 8px; background: var(--danger); border-radius: 50%; box-shadow: 0 0 10px var(--danger); }
-
-        table { width: 100%; border-collapse: collapse; font-size: 0.85rem; margin-top: 10px; }
+        table { width: 100%; border-collapse: collapse; font-size: 0.85rem; }
         th, td { padding: 12px 8px; border-bottom: 1px solid var(--border); text-align: left; }
-        
-        .modal { display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 95%; max-width: 550px; background: var(--card); border: 1px solid var(--accent); z-index: 1000; padding: 20px; border-radius: 15px; max-height: 85vh; overflow-y: auto; }
-        .overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); z-index: 900; }
+        .modal { display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 95%; max-width: 500px; background: var(--card); border: 1px solid var(--accent); z-index: 1000; padding: 20px; border-radius: 15px; }
+        .overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 900; }
+        .notif-badge { background: var(--warning); color: black; font-size: 10px; padding: 2px 5px; border-radius: 4px; font-weight: bold; }
     </style>
 </head>
 <body>
 
 <div id="login-screen" style="position:fixed; top:0; left:0; width:100%; height:100%; background:var(--bg); z-index:5000; display:flex; justify-content:center; align-items:center;">
-    <div class="card" style="width:300px; text-align:center;">
+    <div class="card" style="width:320px; text-align:center;">
         <h2 style="color:var(--accent)">SmartCredit Pro</h2>
-        <input type="email" id="auth-email" placeholder="Correo">
+        <input type="email" id="auth-email" placeholder="Email">
         <input type="password" id="auth-pass" placeholder="Contraseña">
-        <button onclick="login()" class="btn-main">ENTRAR AL SISTEMA</button>
+        <button onclick="login()" class="btn-main">ENTRAR</button>
     </div>
 </div>
 
-<div class="container">
-    <div class="tabs">
-        <button class="tab-btn active" id="t-cobros" onclick="nav('cobros')">COBROS</button>
-        <button class="tab-btn" id="t-clientes" onclick="nav('clientes')">CLIENTES</button>
-        <button class="tab-btn" id="t-reportes" onclick="nav('reportes')">📊 REPORTES</button>
-        <button class="tab-btn" id="t-dgi" onclick="nav('dgi')">⚙️ HARDWARE</button>
-        <button onclick="salir()" style="background:var(--danger); color:white; width:60px; font-size:10px;">SALIR</button>
+<div class="container" id="app-content" style="display:none;">
+    <div id="nav-admin" class="tabs" style="display:none;">
+        <button class="tab-btn active" onclick="nav('cobros')">PRESTAMOS</button>
+        <button class="tab-btn" onclick="nav('personal')">👥 PERSONAL</button>
+        <button class="tab-btn" onclick="nav('reportes')">📊 REPORTES</button>
+        <button class="tab-btn" onclick="nav('config')">⚙️ AJUSTES</button>
+        <button onclick="salir()" style="background:var(--danger); width:40px;">X</button>
     </div>
 
-    <div id="sec-cobros">
+    <div id="nav-cobrador" class="tabs" style="display:none;">
+        <div style="color:var(--accent); font-weight:bold; padding:10px;">RUTA DE COBRO</div>
+        <button onclick="salir()" style="background:var(--danger); width:60px;">SALIR</button>
+    </div>
+
+    <div id="sec-config" style="display:none;">
+        <div class="card">
+            <h3>Centro de Notificaciones</h3>
+            <p style="font-size:11px;">Número de WhatsApp para recibir reportes de cobros y asistencia:</p>
+            <input type="tel" id="cfg-wa-admin" placeholder="Ej: 18295550000" onchange="syncData()">
+            <hr>
+            <h3>Configuración General</h3>
+            <div class="grid">
+                <div><small>% Comisión Cobrador</small><input type="number" id="cfg-comision" value="10" onchange="syncData()"></div>
+                <div><small>Mora por Día ($)</small><input type="number" id="cfg-mora" value="50" onchange="syncData()"></div>
+            </div>
+            <button onclick="syncData()" class="btn-main" style="margin-top:10px;">GUARDAR CAMBIOS</button>
+        </div>
+    </div>
+
+    <div id="sec-asistencia" style="display:none;">
+        <div class="card" style="text-align:center;">
+            <h2 id="welcome-user">Hola</h2>
+            <div id="punch-controls">
+                <button onclick="marcarAsistencia('entrada')" id="btn-entrada" class="btn-main" style="height:80px; font-size:18px;">INICIAR RUTA</button>
+                <button onclick="marcarAsistencia('salida')" id="btn-salida" style="display:none; background:var(--danger); height:80px; font-size:18px;">CERRAR DÍA Y ENVIAR REPORTE</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="sec-ruta" style="display:none;">
+        <div id="lista-ruta"></div>
+    </div>
+
+    <div id="sec-personal" style="display:none;">
+        <div class="card">
+            <h3>Estado de Cobradores Hoy</h3>
+            <table id="workersTable">
+                <thead><tr><th>Nombre</th><th>Recaudado</th><th>Entregar</th><th>Acción</th></tr></thead>
+                <tbody></tbody>
+            </table>
+        </div>
+    </div>
+
+    <div id="sec-cobros" style="display:none;">
         <div class="card">
             <h3>Nuevo Préstamo</h3>
-            <form id="loanForm">
-                <input type="text" id="p-nombre" placeholder="Nombre Completo" required>
-                <input type="tel" id="p-tel" placeholder="WhatsApp (809...)">
-                <textarea id="p-dir" placeholder="Dirección del Cliente"></textarea>
-                <div class="grid">
-                    <input type="number" id="p-monto" placeholder="Capital RD$" required>
-                    <input type="number" id="p-tasa" placeholder="Interés Total %" required>
-                </div>
-                <div class="grid">
-                    <input type="number" id="p-cuotas" placeholder="Cantidad de Cuotas" required>
-                    <select id="p-frec">
-                        <option value="7">Semanal</option>
-                        <option value="15">Quincenal</option>
-                        <option value="30" selected>Mensual</option>
-                    </select>
-                </div>
-                <button type="submit" class="btn-main">CREAR PRÉSTAMO Y PLAN</button>
-            </form>
-        </div>
-        <div class="card">
-            <input type="text" placeholder="🔍 Buscar por nombre de cliente..." onkeyup="renderTable(this.value)">
-            <table id="mainTable">
-                <thead><tr><th>Cliente</th><th>Monto</th><th>Pendiente</th><th>Acción</th></tr></thead>
-                <tbody></tbody>
-            </table>
-        </div>
-    </div>
-
-    <div id="sec-clientes" style="display:none">
-        <div class="card">
-            <h3>Directorio de Contactos</h3>
-            <input type="text" id="search-cli" placeholder="🔍 Filtrar por nombre o teléfono..." onkeyup="renderClients(this.value)">
-            <table id="clientsTable">
-                <thead><tr><th>Nombre/Dir</th><th>Teléfono</th><th>Acción</th></tr></thead>
-                <tbody></tbody>
-            </table>
-        </div>
-    </div>
-
-    <div id="sec-reportes" style="display:none">
-        <div class="card" style="border: 1px solid var(--neon); background: rgba(57, 211, 83, 0.05);">
-            <div style="display:flex; justify-content:space-between; align-items:center;">
-                <h3 style="color:var(--neon); margin:0;">💰 Cuadre de Caja Hoy</h3>
-                <button onclick="imprimirCierre()" style="background:white; color:black; width:auto; padding:5px 10px; font-size:11px;">🖨️ IMPRIMIR CIERRE</button>
-            </div>
-            <div class="grid" style="margin-top:15px;">
-                <div style="text-align:center; border-right:1px solid var(--border);">
-                    <small>Efectivo Total</small>
-                    <h2 id="cierre-hoy" style="margin:5px 0;">$0</h2>
-                </div>
-                <div style="text-align:center;">
-                    <small>Recibos Cobrados</small>
-                    <h2 id="cantidad-pagos" style="margin:5px 0;">0</h2>
-                </div>
-            </div>
-        </div>
-
-        <div class="card" style="border: 1px solid var(--danger); background: rgba(248, 81, 73, 0.05);">
-            <h3 style="color:var(--danger)">⚠️ Alerta de Atrasos</h3>
-            <table id="morososTable">
-                <thead><tr><th>Cliente</th><th>Días</th><th>Deuda + Mora</th><th>Acción</th></tr></thead>
-                <tbody></tbody>
-            </table>
-        </div>
-
-        <div class="card">
-            <h4>Historial de Operaciones</h4>
-            <table id="historyTable">
-                <thead><tr><th>Fecha</th><th>Cliente</th><th>Capital</th><th>Mora</th></tr></thead>
-                <tbody></tbody>
-            </table>
-            <button onclick="exportarCSV()" style="background:#30363d; color:white; font-size:11px; margin-top:10px;">📥 DESCARGAR EXCEL</button>
-        </div>
-    </div>
-
-    <div id="sec-dgi" style="display:none">
-        <div class="card">
-            <h3>Configuración de Mora</h3>
+            <input type="text" id="p-nombre" placeholder="Nombre Cliente">
+            <input type="tel" id="p-tel" placeholder="WhatsApp Cliente">
+            <textarea id="p-dir" placeholder="Dirección / Link Google Maps"></textarea>
             <div class="grid">
-                <select id="cfg-tipo-mora">
-                    <option value="fijo">Monto Fijo ($) por día</option>
-                    <option value="porcentaje">Porcentaje (%) por día</option>
-                </select>
-                <input type="number" id="cfg-valor-mora" placeholder="Valor (Ej: 50)">
+                <input type="number" id="p-monto" placeholder="Capital">
+                <input type="number" id="p-cuotas" placeholder="Cuotas">
+                <select id="p-cobrador"><option value="">Asignar Cobrador...</option></select>
             </div>
+            <button onclick="crearPrestamo()" class="btn-main">CREAR</button>
         </div>
-        <div class="card">
-            <h3>Ajustes de Hardware</h3>
-            <input type="text" id="dgi-rnc" placeholder="RNC de la Empresa">
-            <label style="display:flex; align-items:center; gap:10px; font-size:0.8rem; margin-top:10px;">
-                <input type="checkbox" id="cfg-abrir-caja" style="width:auto; margin:0;" checked> Abrir gaveta automáticamente al cobrar
-            </label>
-            <button onclick="saveConfig()" class="btn-main" style="margin-top:15px;">GUARDAR CAMBIOS</button>
-        </div>
+        <div class="card"><table id="mainTable"><thead><tr><th>Cliente</th><th>Saldo</th><th>Cobrador</th></tr></thead><tbody></tbody></table></div>
+    </div>
+
+    <div id="sec-reportes" style="display:none;">
+        <div class="card"><table id="historyTable"><thead><tr><th>Fecha</th><th>Cobrador</th><th>Cliente</th><th>Monto</th></tr></thead><tbody></tbody></table></div>
     </div>
 </div>
 
 <div class="overlay" onclick="closeModal()"></div>
-
-<div class="modal" id="pModal">
-    <div style="display:flex; justify-content:space-between; align-items:start;">
-        <div><h3 id="m-name" style="margin:0;"></h3><p id="m-dir" style="font-size:11px; color:var(--accent);"></p></div>
-        <button onclick="enviarRecordatorio()" style="background:#25d366; width:auto; padding:5px 10px; font-size:12px;">💬 WhatsApp</button>
+<div class="modal" id="modalCobro">
+    <h3 id="mc-nombre">---</h3>
+    <div class="grid">
+        <button id="mc-wa" style="background:#25d366;">WhatsApp</button>
+        <button id="mc-map" style="background:white; color:black;">Mapa</button>
     </div>
-    <table id="m-table">
-        <thead><tr><th>#</th><th>Vence</th><th>Monto</th><th>Acción</th></tr></thead>
-        <tbody></tbody>
-    </table>
-    
-    <button onclick="generarQRCliente()" style="margin-top:15px; background:white; color:black; font-size:11px;">📲 GENERAR QR PARA CLIENTE</button>
-    <div id="qr-container" style="display:none; text-align:center; margin-top:10px; padding:10px; background:white; border-radius:10px;">
-        <div id="qrcode" style="display:flex; justify-content:center;"></div>
-        <button onclick="document.getElementById('qr-container').style.display='none'" style="background:var(--danger); margin-top:5px; padding:3px; font-size:9px;">OCULTAR QR</button>
-    </div>
-    <button onclick="closeModal()" style="margin-top:15px; background:var(--danger);">CERRAR</button>
-</div>
-
-<div id="editClientModal" class="modal" style="z-index: 2000;">
-    <h3>Editar Datos del Cliente</h3>
-    <input type="hidden" id="edit-old-name">
-    <input type="text" id="edit-name" placeholder="Nombre">
-    <input type="tel" id="edit-tel" placeholder="Teléfono">
-    <textarea id="edit-dir" placeholder="Dirección"></textarea>
-    <div class="grid"><button onclick="saveClientEdit()" class="btn-main">ACTUALIZAR</button><button onclick="closeEditModal()" style="background:var(--danger);">CANCELAR</button></div>
+    <hr>
+    <div id="mc-cuotas"></div>
+    <button onclick="closeModal()" style="background:var(--danger); margin-top:10px;">CERRAR</button>
 </div>
 
 <script type="module">
@@ -187,217 +128,177 @@
     import { getAuth, signInWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
     import { getFirestore, doc, setDoc, getDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
-    // CONFIGURACIÓN FIREBASE
     const firebaseConfig = { apiKey: "AIzaSyBG8gNLEehKd_UPay-rTb5nVr2Vw3WfiHs", authDomain: "pres-9e035.firebaseapp.com", projectId: "pres-9e035", storageBucket: "pres-9e035.firebasestorage.app", messagingSenderId: "561822383782", appId: "1:561822383782:web:60ea314bd3dc7a28333e67" };
     const app = initializeApp(firebaseConfig);
     const auth = getAuth(app);
     const db = getFirestore(app);
 
-    let CARTERA = [], PAGOS = [], UID = null;
+    let DATA = { cartera: [], pagos: [], personal: {}, config: { waAdmin: "", comision: 10 } };
+    let USER_MAIL = "";
+    let ES_ADMIN = false;
 
-    // --- AUTENTICACIÓN ---
     window.login = async () => {
         try { await signInWithEmailAndPassword(auth, document.getElementById('auth-email').value, document.getElementById('auth-pass').value); } 
-        catch(e){ alert("Error: Verifica correo/contraseña"); }
+        catch(e) { alert("Error"); }
     };
     window.salir = () => signOut(auth);
-    onAuthStateChanged(auth, async (u) => { 
-        if(u){ UID=u.uid; await load(); document.getElementById('login-screen').style.display='none'; }
-        else{ document.getElementById('login-screen').style.display='flex'; }
+
+    onAuthStateChanged(auth, async (user) => {
+        if (user) {
+            USER_MAIL = user.email;
+            ES_ADMIN = (USER_MAIL === "tu-correo-admin@gmail.com"); // <--- CAMBIA ESTO
+            await loadData();
+            document.getElementById('login-screen').style.display = 'none';
+            document.getElementById('app-content').style.display = 'block';
+            setupUI();
+        } else {
+            document.getElementById('login-screen').style.display = 'flex';
+        }
     });
 
-    // --- SINCRONIZACIÓN Y CARGA ---
-    async function sync() {
-        if(!UID) return;
-        await setDoc(doc(db, "usuarios", UID), {
-            cartera: CARTERA, pagos: PAGOS,
-            config: { 
-                tipo: document.getElementById('cfg-tipo-mora').value, 
-                valor: document.getElementById('cfg-valor-mora').value,
-                rnc: document.getElementById('dgi-rnc').value,
-                caja: document.getElementById('cfg-abrir-caja').checked
-            }
-        });
-        checkAlerts();
-    }
-
-    async function load() {
-        const s = await getDoc(doc(db, "usuarios", UID));
-        if(s.exists()){
-            const d = s.data(); CARTERA = d.cartera || []; PAGOS = d.pagos || [];
-            if(d.config){ 
-                document.getElementById('cfg-tipo-mora').value = d.config.tipo; 
-                document.getElementById('cfg-valor-mora').value = d.config.valor;
-                document.getElementById('dgi-rnc').value = d.config.rnc || '';
-                document.getElementById('cfg-abrir-caja').checked = d.config.caja !== undefined ? d.config.caja : true;
-            }
-            renderTable(); checkAlerts();
+    async function loadData() {
+        const s = await getDoc(doc(db, "empresa", "global_data"));
+        if(s.exists()) {
+            DATA = s.data();
+            document.getElementById('cfg-wa-admin').value = DATA.config.waAdmin || "";
+            document.getElementById('cfg-comision').value = DATA.config.comision || 10;
         }
     }
 
-    // --- LÓGICA DE NEGOCIO ---
-    function calcularMora(fec, monto) {
-        const hoy = new Date(); const p = fec.split('/'); const venc = new Date(p[2], p[1]-1, p[0]);
-        if(hoy > venc){
-            const dias = Math.floor((hoy - venc) / 86400000);
-            const val = parseFloat(document.getElementById('cfg-valor-mora').value) || 0;
-            const res = document.getElementById('cfg-tipo-mora').value === 'fijo' ? dias*val : (val/100)*monto*dias;
-            return { dias: dias, monto: res.toFixed(2) };
+    async function syncData() {
+        DATA.config.waAdmin = document.getElementById('cfg-wa-admin').value;
+        DATA.config.comision = document.getElementById('cfg-comision').value;
+        await setDoc(doc(db, "empresa", "global_data"), DATA);
+    }
+
+    function setupUI() {
+        if(ES_ADMIN) {
+            document.getElementById('nav-admin').style.display = 'flex';
+            const sel = document.getElementById('p-cobrador');
+            sel.innerHTML = '<option value="">Asignar Cobrador...</option>';
+            for(let m in DATA.personal) sel.innerHTML += `<option value="${m}">${m.split('@')[0]}</option>`;
+            nav('cobros');
+        } else {
+            document.getElementById('nav-cobrador').style.display = 'flex';
+            checkAsistencia();
         }
-        return { dias: 0, monto: 0 };
     }
 
-    function checkAlerts() {
-        let hay = false;
-        CARTERA.forEach(p => p.plan.forEach(c => { if(!c.pagado && calcularMora(c.fecha, c.monto).dias > 0) hay = true; }));
-        document.getElementById('t-reportes').classList.toggle('badge-alert', hay);
-    }
-
-    // --- HARDWARE E IMPRESIÓN ---
-    window.imprimirTicket = (idCuota, monto, mora) => {
-        const rnc = document.getElementById('dgi-rnc').value || "REGISTRO N/A";
-        const total = (parseFloat(monto) + parseFloat(mora)).toFixed(2);
-        const pWin = window.open('', '_blank', 'width=350,height=600');
-        pWin.document.write(`
-            <html><head><style>body{font-family:'Courier New';width:260px;padding:10px;font-size:12px;}.tc{text-align:center;}.tr{text-align:right;}</style></head>
-            <body>
-                <div class="tc"><h3 style="margin:0;">SMARTCREDIT PRO</h3><p>RNC: ${rnc}</p><hr><p>RECIBO DE PAGO</p><p>${new Date().toLocaleString()}</p></div>
-                <p>CLIENTE: ${window.curr.nombre}</p><hr>
-                <table style="width:100%">
-                    <tr><td>Cuota #${idCuota}</td><td class="tr">$${parseFloat(monto).toLocaleString()}</td></tr>
-                    ${mora > 0 ? `<tr><td>Mora</td><td class="tr">$${parseFloat(mora).toLocaleString()}</td></tr>` : ''}
-                    <tr style="font-weight:bold"><td>TOTAL RD$</td><td class="tr">$${total}</td></tr>
-                </table><hr>
-                <div class="tc" style="margin-top:20px;"><p>_______________________</p><p>Firma / Sello</p></div>
-            </body></html>
-        `);
-        pWin.document.close();
-        pWin.focus();
-        setTimeout(() => { pWin.print(); pWin.close(); }, 500);
-    };
-
-    window.imprimirCierre = () => {
-        const datos = actualizarCierreCaja();
-        const pWin = window.open('', '_blank', 'width=350,height=600');
-        pWin.document.write(`
-            <html><body style="font-family:'Courier New';width:260px;padding:10px;font-size:12px;">
-                <div style="text-align:center;"><h3>CIERRE DE CAJA</h3><p>${new Date().toLocaleString()}</p><hr></div>
-                <p>PAGOS DEL DIA: ${datos.cantidad}</p><hr>
-                <h2 style="text-align:center;">TOTAL RD$ ${datos.total.toLocaleString()}</h2><hr>
-                <div style="margin-top:30px;text-align:center;"><p>_______________________</p><p>Recibido Conforme</p></div>
-            </body></html>
-        `);
-        pWin.document.close(); pWin.print(); pWin.close();
-    };
-
-    window.actualizarCierreCaja = () => {
-        const hoy = new Date().toLocaleDateString();
-        const pagosHoy = PAGOS.filter(p => p.fecha === hoy);
-        const total = pagosHoy.reduce((a, b) => a + parseFloat(b.cap) + parseFloat(b.mora), 0);
-        document.getElementById('cierre-hoy').innerText = `RD$${total.toLocaleString()}`;
-        document.getElementById('cantidad-pagos').innerText = pagosHoy.length;
-        return { total, cantidad: pagosHoy.length };
-    };
-
-    // --- NAVEGACIÓN Y RENDER ---
     window.nav = (s) => {
-        ['cobros', 'clientes', 'reportes', 'dgi'].forEach(x => document.getElementById('sec-'+x).style.display='none');
+        ['cobros', 'personal', 'reportes', 'config', 'asistencia', 'ruta'].forEach(x => { if(document.getElementById('sec-'+x)) document.getElementById('sec-'+x).style.display='none'; });
         document.getElementById('sec-'+s).style.display='block';
-        document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
-        document.getElementById('t-'+s).classList.add('active');
+        if(s === 'personal') renderPersonal();
+        if(s === 'cobros') renderMainTable();
         if(s === 'reportes') renderReportes();
-        if(s === 'clientes') renderClients();
     };
 
-    window.renderTable = (f = "") => {
-        const tb = document.querySelector('#mainTable tbody'); tb.innerHTML = '';
-        CARTERA.filter(p => p.nombre.toLowerCase().includes(f.toLowerCase())).forEach(p => {
-            const pen = p.plan.filter(c => !c.pagado).reduce((a, b) => a + parseFloat(b.monto), 0);
-            tb.innerHTML += `<tr><td><b>${p.nombre}</b></td><td>$${p.monto}</td><td style="color:red">$${pen.toFixed(0)}</td><td><button onclick="openModal(${p.id})" style="background:var(--accent); padding:5px;">VER</button></td></tr>`;
-        });
+    // --- FUNCIÓN DE NOTIFICACIÓN WHATSAPP ---
+    function enviarNotificacion(msg) {
+        const num = DATA.config.waAdmin;
+        if(!num) return;
+        // Abre una pestaña temporal y la cierra (o deja abierta según el navegador)
+        const url = `https://wa.me/${num.replace(/\D/g,'')}?text=${encodeURIComponent(msg)}`;
+        window.open(url, '_blank');
+    }
+
+    // --- COBRADOR ---
+    window.marcarAsistencia = async (tipo) => {
+        const hoy = new Date().toLocaleDateString();
+        const hora = new Date().toLocaleTimeString();
+        if(!DATA.personal[USER_MAIL]) DATA.personal[USER_MAIL] = {};
+        DATA.personal[USER_MAIL].fecha = hoy;
+        DATA.personal[USER_MAIL][tipo] = hora;
+        
+        await syncData();
+        enviarNotificacion(`📌 *REPORTE ASISTENCIA*\nCobrador: ${USER_MAIL.split('@')[0]}\nAcción: ${tipo.toUpperCase()}\nHora: ${hora}`);
+        checkAsistencia();
     };
 
-    window.renderClients = (f = "") => {
-        const tb = document.querySelector('#clientsTable tbody'); tb.innerHTML = '';
-        const m = new Map(); CARTERA.forEach(p => { if(!m.has(p.nombre)) m.set(p.nombre, p); });
-        Array.from(m.values()).filter(c => c.nombre.toLowerCase().includes(f.toLowerCase())).forEach(c => {
-            tb.innerHTML += `<tr><td><b>${c.nombre}</b><br><small>${c.dir || ''}</small></td><td>${c.tel || ''}</td><td style="display:flex; gap:3px;"><button onclick="prepareEditClient('${c.nombre}')" style="font-size:9px; background:white; color:black;">Edit</button><button onclick="window.open('https://wa.me/1${c.tel.replace(/\D/g,'')}')" style="background:#25d366; font-size:9px;">WA</button></td></tr>`;
+    window.procesarPago = async (cuotaId) => {
+        const p = DATA.cartera.find(x => x.id === window.currentP.id);
+        const c = p.plan.find(cu => cu.id === cuotaId);
+        c.pagado = true;
+        const nuevoPago = { fecha: new Date().toLocaleDateString(), hora: new Date().toLocaleTimeString(), cliente: p.nombre, monto: c.monto, cobrador: USER_MAIL };
+        DATA.pagos.unshift(nuevoPago);
+        
+        await syncData();
+        enviarNotificacion(`✅ *NUEVO COBRO*\nCobrador: ${USER_MAIL.split('@')[0]}\nCliente: ${p.nombre}\nMonto: $${c.monto}`);
+        alert("Pago registrado."); closeModal(); renderRuta();
+    };
+
+    function checkAsistencia() {
+        const hoy = new Date().toLocaleDateString();
+        const info = DATA.personal[USER_MAIL] || {};
+        if(info.fecha === hoy && info.entrada && !info.salida) { nav('ruta'); renderRuta(); }
+        else {
+            nav('asistencia');
+            document.getElementById('btn-entrada').style.display = (info.salida && info.fecha === hoy) ? 'none' : 'block';
+            document.getElementById('btn-salida').style.display = (info.entrada && !info.salida) ? 'block' : 'none';
+        }
+    }
+
+    function renderRuta() {
+        const cont = document.getElementById('lista-ruta'); cont.innerHTML = "";
+        DATA.cartera.filter(p => p.cobrador === USER_MAIL).forEach(p => {
+            if(!p.plan.some(c => !c.pagado)) return;
+            cont.innerHTML += `<div class="card" style="display:flex; justify-content:space-between; align-items:center;">
+                <div><b>${p.nombre}</b><br><small>${p.dir.substring(0,25)}...</small></div>
+                <button onclick="verDetalleCobro(${p.id})" style="width:auto; background:var(--accent); padding:10px;">COBRAR</button>
+            </div>`;
         });
+    }
+
+    window.verDetalleCobro = (id) => {
+        const p = DATA.cartera.find(x => x.id === id); window.currentP = p;
+        document.getElementById('mc-nombre').innerText = p.nombre;
+        document.getElementById('mc-wa').onclick = () => window.open(`https://wa.me/${p.tel.replace(/\D/g,'')}`);
+        document.getElementById('mc-map').onclick = () => window.open(p.dir.includes('http') ? p.dir : `https://www.google.com/maps/search/${encodeURIComponent(p.dir)}`);
+        const list = document.getElementById('mc-cuotas'); list.innerHTML = "";
+        p.plan.filter(c => !c.pagado).forEach(c => {
+            list.innerHTML += `<div style="display:flex; justify-content:space-between; padding:10px; background:#0d1117; margin-bottom:5px; border-radius:8px;">
+                <span>Cuota #${c.id} ($${c.monto})</span>
+                <button onclick="procesarPago(${c.id})" style="width:auto; background:var(--neon); color:black; padding:5px;">COBRAR</button>
+            </div>`;
+        });
+        document.getElementById('modalCobro').style.display = 'block'; document.querySelector('.overlay').style.display = 'block';
+    };
+
+    // --- ADMIN ---
+    window.crearPrestamo = async () => {
+        const m = parseFloat(document.getElementById('p-monto').value);
+        const cu = parseInt(document.getElementById('p-cuotas').value);
+        DATA.cartera.push({
+            id: Date.now(), nombre: document.getElementById('p-nombre').value, tel: document.getElementById('p-tel').value,
+            dir: document.getElementById('p-dir').value, monto: m, cobrador: document.getElementById('p-cobrador').value,
+            plan: Array.from({length:cu}, (_,idx) => ({ id: idx+1, monto: (m/cu).toFixed(2), pagado: false }))
+        });
+        await syncData(); nav('cobros');
+    };
+
+    function renderPersonal() {
+        const tb = document.querySelector('#workersTable tbody'); tb.innerHTML = "";
+        const hoy = new Date().toLocaleDateString();
+        for(let m in DATA.personal) {
+            const pgs = DATA.pagos.filter(p => p.fecha === hoy && p.cobrador === m);
+            const total = pgs.reduce((a,b) => a + parseFloat(b.monto), 0);
+            const com = total * (DATA.config.comision/100);
+            tb.innerHTML += `<tr><td>${m.split('@')[0]}</td><td>$${total}</td><td>$${(total-com).toFixed(0)}</td><td><button onclick="liquidar('${m}')">Cerrar</button></td></tr>`;
+        }
+    }
+
+    window.liquidar = async (m) => { if(confirm("¿Recibiste el dinero?")) { DATA.personal[m].entrada = null; DATA.personal[m].salida = "OK"; await syncData(); renderPersonal(); } };
+
+    window.renderMainTable = () => {
+        const tb = document.querySelector('#mainTable tbody'); tb.innerHTML = "";
+        DATA.cartera.forEach(p => { tb.innerHTML += `<tr><td>${p.nombre}</td><td>$${p.monto}</td><td>${p.cobrador.split('@')[0]}</td></tr>`; });
     };
 
     window.renderReportes = () => {
-        const tm = document.querySelector('#morososTable tbody'); tm.innerHTML = '';
-        const th = document.querySelector('#historyTable tbody'); th.innerHTML = '';
-        CARTERA.forEach(p => {
-            let dm = 0, ma = 0;
-            p.plan.forEach(c => { if(!c.pagado){ const i = calcularMora(c.fecha, c.monto); if(i.dias > 0){ dm += parseFloat(c.monto)+parseFloat(i.monto); ma = i.dias; } } });
-            if(ma > 0) tm.innerHTML += `<tr><td>${p.nombre}</td><td>${ma}d</td><td>$${dm.toFixed(0)}</td><td><button onclick="openModal(${p.id})">Ir</button></td></tr>`;
-        });
-        PAGOS.forEach(p => { th.innerHTML += `<tr><td>${p.fecha}</td><td>${p.cliente}</td><td>$${p.cap}</td><td>$${p.mora}</td></tr>`; });
-        actualizarCierreCaja();
+        const tb = document.querySelector('#historyTable tbody'); tb.innerHTML = "";
+        DATA.pagos.forEach(p => { tb.innerHTML += `<tr><td>${p.fecha}</td><td>${p.cobrador.split('@')[0]}</td><td>${p.cliente}</td><td>$${p.monto}</td></tr>`; });
     };
 
-    // --- ACCIONES ---
-    window.cobrar = async (id, mora) => {
-        const p = CARTERA.find(x => x.id === window.curr.id); const c = p.plan.find(cu => cu.id === id);
-        if(!confirm("¿Procesar pago y abrir caja?")) return;
-        PAGOS.unshift({ fecha: new Date().toLocaleDateString(), cliente: p.nombre, cap: c.monto, mora: mora });
-        c.pagado = true; c.moraPagada = mora; await sync();
-        window.imprimirTicket(id, c.monto, mora);
-        openModal(p.id);
-    };
-
-    window.generarQRCliente = () => {
-        const qrDiv = document.getElementById("qrcode"); qrDiv.innerHTML = "";
-        new QRCode(qrDiv, { text: `https://consulta.tuapi.com?id=${window.curr.id}`, width: 120, height: 120 });
-        document.getElementById('qr-container').style.display = 'block';
-    };
-
-    window.enviarRecordatorio = () => {
-        const p = window.curr; const c = p.plan.find(cu => !cu.pagado);
-        if(!c) return;
-        window.open(`https://wa.me/1${p.tel.replace(/\D/g,'')}?text=${encodeURIComponent('Hola '+p.nombre+', recordamos cuota #'+c.id+' de $'+c.monto+' vence el '+c.fecha)}`, '_blank');
-    };
-
-    window.prepareEditClient = (n) => {
-        const p = CARTERA.find(x => x.nombre === n);
-        document.getElementById('edit-old-name').value = p.nombre; document.getElementById('edit-name').value = p.nombre;
-        document.getElementById('edit-tel').value = p.tel; document.getElementById('edit-dir').value = p.dir;
-        document.getElementById('editClientModal').style.display = 'block'; document.querySelector('.overlay').style.display = 'block';
-    };
-
-    window.saveClientEdit = async () => {
-        const old = document.getElementById('edit-old-name').value;
-        CARTERA = CARTERA.map(p => p.nombre === old ? {...p, nombre:document.getElementById('edit-name').value, tel:document.getElementById('edit-tel').value, dir:document.getElementById('edit-dir').value} : p);
-        await sync(); closeEditModal(); renderClients(); renderTable();
-    };
-
-    window.openModal = (id) => {
-        const p = CARTERA.find(x => x.id === id); window.curr = p;
-        document.getElementById('m-name').innerText = p.nombre; document.getElementById('m-dir').innerText = p.dir || 'Samaná, RD';
-        const tb = document.querySelector('#m-table tbody'); tb.innerHTML = '';
-        p.plan.forEach(c => {
-            const i = !c.pagado ? calcularMora(c.fecha, c.monto) : { monto: 0 };
-            tb.innerHTML += `<tr><td>${c.id}</td><td>${c.fecha}${i.monto>0?'<br><small style="color:red">+$'+i.monto+'</small>':''}</td><td>$${c.monto}</td><td>${!c.pagado ? `<button onclick="cobrar(${c.id}, ${i.monto})" style="background:var(--neon)">$</button>` : '✅'}</td></tr>`;
-        });
-        document.getElementById('pModal').style.display='block'; document.querySelector('.overlay').style.display='block';
-    };
-
-    document.getElementById('loanForm').onsubmit = async (e) => {
-        e.preventDefault();
-        const m = parseFloat(document.getElementById('p-monto').value), t = parseFloat(document.getElementById('p-tasa').value)/100, cu = parseInt(document.getElementById('p-cuotas').value), f = parseInt(document.getElementById('p-frec').value);
-        CARTERA.push({ id: Date.now(), nombre: document.getElementById('p-nombre').value, tel: document.getElementById('p-tel').value, dir: document.getElementById('p-dir').value, monto: m, plan: Array.from({length:cu}, (_,i) => { let d = new Date(); d.setDate(d.getDate()+(f*(i+1))); return { id: i+1, fecha: d.toLocaleDateString(), monto: ((m+(m*t))/cu).toFixed(2), pagado: false }; }) });
-        await sync(); e.target.reset(); renderTable();
-    };
-
-    window.exportarCSV = () => {
-        let c = "Fecha,Cliente,Capital,Mora\n"; PAGOS.forEach(p => c += `${p.fecha},${p.cliente},${p.cap},${p.mora}\n`);
-        const a = document.createElement('a'); a.href=URL.createObjectURL(new Blob([c], {type:'text/csv'})); a.download="Cuadre_SmartCredit.csv"; a.click();
-    };
-
-    window.saveConfig = () => sync();
-    window.closeModal = () => { document.getElementById('pModal').style.display='none'; document.querySelector('.overlay').style.display='none'; document.getElementById('qr-container').style.display='none'; };
-    window.closeEditModal = () => { document.getElementById('editClientModal').style.display='none'; document.querySelector('.overlay').style.display='none'; };
+    window.closeModal = () => { document.getElementById('modalCobro').style.display='none'; document.querySelector('.overlay').style.display='none'; };
 </script>
 </body>
 </html>
