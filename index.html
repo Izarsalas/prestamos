@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SmartCredit Pro v9 - Control de Acceso</title>
+    <title>SmartCredit Pro v9 - Admin Total</title>
     <style>
         :root {
             --bg: #0d1117; --card: #161b22; --accent: #58a6ff;
@@ -18,19 +18,14 @@
         .stat-box p { margin: 5px 0 0; font-size: 18px; font-weight: bold; color: var(--neon); }
         button { padding: 12px; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; transition: 0.3s; width: 100%; }
         .btn-main { background: var(--neon); color: #0d1117; }
-        .btn-sos { background: var(--danger); color: white; animation: pulse 1.5s infinite; height: 50px; font-size: 1rem; }
-        @keyframes pulse { 0% { box-shadow: 0 0 0 0 rgba(248, 81, 73, 0.7); } 70% { box-shadow: 0 0 0 10px rgba(248, 81, 73, 0); } 100% { box-shadow: 0 0 0 0 rgba(248, 81, 73, 0); } }
         .tabs { display: flex; gap: 5px; margin-bottom: 15px; position: sticky; top: 0; background: var(--bg); padding: 10px 0; z-index: 100; border-bottom: 1px solid var(--border); overflow-x: auto; }
-        .tab-btn { background: #30363d; color: white; min-width: 80px; font-size: 0.65rem; padding: 10px 5px; }
+        .tab-btn { background: #30363d; color: white; min-width: 90px; font-size: 0.7rem; padding: 10px 5px; }
         .tab-btn.active { background: var(--accent); }
         table { width: 100%; border-collapse: collapse; font-size: 0.8rem; }
         th, td { padding: 10px 5px; border-bottom: 1px solid var(--border); text-align: left; }
-        #gps-indicator { font-size: 10px; padding: 5px; border-radius: 5px; text-align: center; margin-bottom: 10px; }
-        .gps-on { background: rgba(57, 211, 83, 0.1); color: var(--neon); border: 1px solid var(--neon); }
-        .gps-off { background: rgba(248, 81, 73, 0.1); color: var(--danger); border: 1px solid var(--danger); }
-        .modal { display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 90%; max-width: 400px; background: var(--card); border: 1px solid var(--accent); z-index: 1000; padding: 20px; border-radius: 15px; }
-        .overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 900; }
         select, input, textarea { width: 100%; padding: 10px; margin-top: 5px; background: #0d1117; border: 1px solid var(--border); color: white; border-radius: 8px; box-sizing: border-box; }
+        .overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 900; }
+        .modal { display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 90%; max-width: 400px; background: var(--card); border: 1px solid var(--accent); z-index: 1000; padding: 20px; border-radius: 15px; }
     </style>
 </head>
 <body>
@@ -38,89 +33,73 @@
 <div id="login-screen" style="position:fixed; top:0; left:0; width:100%; height:100%; background:var(--bg); z-index:5000; display:flex; justify-content:center; align-items:center;">
     <div class="card" style="width:280px; text-align:center;">
         <h2 style="color:var(--accent)">SmartCredit Pro</h2>
-        <input type="email" id="auth-email" placeholder="Correo Electrónico">
-        <input type="password" id="auth-pass" placeholder="Contraseña">
+        <input type="email" id="auth-email" placeholder="Correo">
+        <input type="password" id="auth-pass" placeholder="Password">
         <button onclick="login()" class="btn-main" style="margin-top:10px;">ENTRAR</button>
     </div>
 </div>
 
 <div class="container" id="app-content" style="display:none;">
-    <div id="gps-indicator" class="gps-off" style="display:none;">GPS REQUERIDO</div>
-
     <div id="nav-admin" class="tabs" style="display:none;">
-        <button class="tab-btn active" onclick="nav('cobros')">PRESTAMOS</button>
-        <button class="tab-btn" onclick="nav('stats')">ESTADISTICAS</button>
-        <button class="tab-btn" onclick="nav('personal')">COBRADORES</button>
-        <button class="tab-btn" onclick="nav('reportes')">AUDITORIA</button>
-        <button class="tab-btn" onclick="nav('config')">⚙️</button>
-        <button onclick="salir()" style="background:var(--danger); min-width:40px;">X</button>
+        <button class="tab-btn active" onclick="nav('cobros')">PRÉSTAMOS</button>
+        <button class="tab-btn" onclick="nav('usuarios')">USUARIOS</button>
+        <button class="tab-btn" onclick="nav('stats')">MÉTRICAS</button>
+        <button class="tab-btn" onclick="nav('reportes')">LOGS</button>
+        <button onclick="salir()" style="background:var(--danger); min-width:40px; color:white;">X</button>
     </div>
 
     <div id="nav-cobrador" class="tabs" style="display:none;">
-        <div style="color:var(--accent); font-weight:bold; padding:10px;">PANEL COBRADOR</div>
-        <button onclick="salir()" style="background:var(--danger); width:60px; margin-left:auto;">SALIR</button>
+        <div style="color:var(--accent); font-weight:bold; padding:10px;">MODO COBRADOR</div>
+        <button onclick="salir()" style="background:var(--danger); width:60px; margin-left:auto; color:white;">SALIR</button>
     </div>
 
-    <div id="sec-stats" style="display:none;">
-        <div class="stat-grid">
-            <div class="stat-box"><h4>CAPITAL EN CALLE</h4><p id="st-capital">$0</p></div>
-            <div class="stat-box"><h4>INTERESES</h4><p id="st-interes">$0</p></div>
-            <div class="stat-box"><h4>COBRADO HOY</h4><p id="st-hoy">$0</p></div>
-            <div class="stat-box"><h4>CLIENTES</h4><p id="st-clientes">0</p></div>
+    <div id="sec-usuarios" style="display:none;">
+        <div class="card">
+            <h3>Crear Nuevo Cobrador</h3>
+            <input type="text" id="u-nombre" placeholder="Nombre completo">
+            <input type="email" id="u-email" placeholder="Correo (ej: pablo@gmail.com)">
+            <p style="font-size: 10px; color: var(--warning);">*Nota: Los administradores deben empezar con la palabra 'admin'</p>
+            <button onclick="crearUsuario()" class="btn-main" style="margin-top:10px;">AGREGAR COBRADOR</button>
         </div>
-    </div>
-
-    <div id="sec-ruta" style="display:none;">
-        <button id="sos-btn" onclick="toggleSOS()" class="btn-sos">🚨 BOTÓN DE PÁNICO (SOS)</button>
-        <div id="lista-ruta" style="margin-top:15px;"></div>
-    </div>
-
-    <div id="sec-asistencia" style="display:none;">
-        <div class="card" style="text-align:center;">
-            <h3>Control de Asistencia</h3>
-            <button onclick="marcarAsistencia('entrada')" id="btn-entrada" class="btn-main" style="height:60px;">MARCAR ENTRADA</button>
-            <button onclick="marcarAsistencia('salida')" id="btn-salida" style="display:none; background:var(--danger); height:60px;">CERRAR DÍA</button>
+        <div class="card">
+            <h3>Lista de Personal</h3>
+            <table id="userTable"><thead><tr><th>Nombre</th><th>Correo</th></tr></thead><tbody></tbody></table>
         </div>
     </div>
 
     <div id="sec-cobros" style="display:none;">
         <div class="card">
-            <h3>Registrar Nuevo Préstamo</h3>
-            <input type="text" id="p-nombre" placeholder="Nombre del Cliente">
+            <h3>Registrar Préstamo</h3>
+            <input type="text" id="p-nombre" placeholder="Nombre Cliente">
             <input type="tel" id="p-tel" placeholder="WhatsApp">
-            <textarea id="p-dir" placeholder="Dirección"></textarea>
-            <div style="display:flex; gap:5px;"><input type="number" id="p-monto" placeholder="Monto"><input type="number" id="p-cuotas" placeholder="Cuotas"></div>
+            <input type="number" id="p-monto" placeholder="Monto">
+            <input type="number" id="p-cuotas" placeholder="Cuotas">
             <select id="p-frecuencia" style="margin-top:10px;">
-                <option value="1">Diario</option><option value="7">Semanal</option><option value="15">Quincenal</option><option value="30">Mensual</option>
+                <option value="1">Diario</option>
+                <option value="7">Semanal</option>
+                <option value="15">Quincenal</option>
+                <option value="30">Mensual</option>
             </select>
             <select id="p-cobrador" style="margin-top:10px;"><option value="">Asignar Cobrador...</option></select>
-            <button onclick="crearPrestamo()" class="btn-main" style="margin-top:10px;">REGISTRAR</button>
+            <button onclick="crearPrestamo()" class="btn-main" style="margin-top:10px;">CREAR PRÉSTAMO</button>
         </div>
         <div class="card"><table id="mainTable"><thead><tr><th>Cliente</th><th>Monto</th><th>Cobrador</th></tr></thead><tbody></tbody></table></div>
     </div>
 
-    <div id="sec-personal" style="display:none;">
-        <div class="card"><h3>Liquidación</h3><table id="workersTable"><thead><tr><th>Cobrador</th><th>Recaudado</th><th>Acción</th></tr></thead><tbody></tbody></table></div>
-    </div>
-
-    <div id="sec-reportes" style="display:none;">
-        <div class="card"><h3>Historial Auditoría</h3><table id="historyTable"><thead><tr><th>Hora</th><th>Usuario</th><th>Acción</th><th>GPS</th></tr></thead><tbody></tbody></table></div>
-    </div>
-
-    <div id="sec-config" style="display:none;">
-        <div class="card">
-            <h3>Configuración Sistema</h3>
-            <input type="tel" id="cfg-wa-admin" placeholder="WhatsApp Admin">
-            <button onclick="syncData()" class="btn-main" style="margin-top:10px;">GUARDAR</button>
+    <div id="sec-stats" style="display:none;">
+        <div class="stat-grid">
+            <div class="stat-box"><h4>TOTAL CARTERA</h4><p id="st-capital">$0</p></div>
+            <div class="stat-box"><h4>COBRADO HOY</h4><p id="st-hoy">$0</p></div>
         </div>
     </div>
-</div>
 
-<div class="overlay" onclick="closeModal()"></div>
-<div class="modal" id="modalCobro">
-    <h3 id="mc-nombre">---</h3>
-    <div id="mc-cuotas" style="max-height: 300px; overflow-y: auto;"></div>
-    <button onclick="closeModal()" style="background:var(--danger); margin-top:10px; color:white;">CERRAR</button>
+    <div id="sec-asistencia" style="display:none;">
+        <div class="card" style="text-align:center;">
+            <button onclick="marcarAsistencia('entrada')" class="btn-main" style="height:60px;">INICIAR RUTA</button>
+        </div>
+    </div>
+
+    <div id="sec-ruta" style="display:none;"><div id="lista-ruta"></div></div>
 </div>
 
 <script type="module">
@@ -133,22 +112,17 @@
     const auth = getAuth(app);
     const db = getFirestore(app);
 
-    let DATA = { cartera: [], pagos: [], personal: {}, config: { waAdmin: "" } };
+    let DATA = { cartera: [], pagos: [], personal: {} };
     let USER_MAIL = "";
     let ES_ADMIN = false;
-    let CURRENT_GPS = null;
 
-    // --- SEGURIDAD: CONTROL DE ACCESO ---
     onAuthStateChanged(auth, async (user) => {
         if (user) {
             USER_MAIL = user.email.toLowerCase();
-            // Lógica de validación: ¿Empieza con admin?
-            ES_ADMIN = USER_MAIL.startsWith("admin"); 
-            
+            ES_ADMIN = USER_MAIL.startsWith("admin");
             await loadData();
             document.getElementById('login-screen').style.display = 'none';
             document.getElementById('app-content').style.display = 'block';
-            
             setupUI();
         } else {
             document.getElementById('login-screen').style.display = 'flex';
@@ -160,107 +134,114 @@
         const s = await getDoc(doc(db, "empresa", "global_data"));
         if(s.exists()) DATA = s.data();
         renderMainTable();
+        renderUserTable();
     }
 
     async function syncData() {
-        if(document.getElementById('cfg-wa-admin')) DATA.config.waAdmin = document.getElementById('cfg-wa-admin').value;
         await setDoc(doc(db, "empresa", "global_data"), DATA);
     }
 
     function setupUI() {
         if(ES_ADMIN) {
-            // Mostrar menú completo y ocultar el de cobrador
             document.getElementById('nav-admin').style.display = 'flex';
             document.getElementById('nav-cobrador').style.display = 'none';
-            
-            // Poblar lista de cobradores en el formulario
             const sel = document.getElementById('p-cobrador');
             sel.innerHTML = '<option value="">Asignar Cobrador...</option>';
-            for(let m in DATA.personal) sel.innerHTML += `<option value="${m}">${m.split('@')[0]}</option>`;
-            
-            nav('cobros'); 
+            for(let m in DATA.personal) sel.innerHTML += `<option value="${m}">${DATA.personal[m].nombre || m}</option>`;
+            nav('cobros');
         } else {
-            // Ocultar menú admin y mostrar solo panel de cobrador
             document.getElementById('nav-admin').style.display = 'none';
             document.getElementById('nav-cobrador').style.display = 'flex';
-            document.getElementById('gps-indicator').style.display = 'block';
-            
-            trackGPS();
-            checkAsistencia();
-        }
-    }
-
-    window.nav = (s) => {
-        const secciones = ['cobros', 'personal', 'reportes', 'config', 'asistencia', 'ruta', 'stats'];
-        secciones.forEach(x => { 
-            const el = document.getElementById('sec-'+x);
-            if(el) el.style.display = 'none'; 
-        });
-        
-        const target = document.getElementById('sec-'+s);
-        if(target) target.style.display = 'block';
-    };
-
-    function trackGPS() {
-        if (navigator.geolocation) {
-            navigator.geolocation.watchPosition((pos) => {
-                CURRENT_GPS = `https://www.google.com/maps?q=${pos.coords.latitude},${pos.coords.longitude}`;
-                document.getElementById('gps-indicator').className = "gps-on";
-                document.getElementById('gps-indicator').innerText = "📍 GPS ACTIVO (SISTEMA PROTEGIDO)";
-            }, null, { enableHighAccuracy: true });
-        }
-    }
-
-    // --- LÓGICA COBRADOR ---
-    function checkAsistencia() {
-        const info = DATA.personal[USER_MAIL] || {};
-        if(info.fecha === new Date().toLocaleDateString() && info.entrada && !info.salida) {
-            nav('ruta');
-            renderRuta();
-        } else {
             nav('asistencia');
         }
     }
 
-    function renderRuta() {
-        const cont = document.getElementById('lista-ruta');
-        if(!cont) return;
-        cont.innerHTML = "";
-        DATA.cartera.filter(p => p.cobrador === USER_MAIL).forEach(p => {
-            if(!p.plan.some(c => !c.pagado)) return;
-            cont.innerHTML += `<div class="card" style="display:flex; justify-content:space-between; align-items:center;">
-                <b>${p.nombre}</b>
-                <button onclick="verDetalle(${p.id})" style="width:auto; background:var(--accent); padding:10px;">COBRAR</button>
-            </div>`;
+    window.nav = (s) => {
+        ['cobros', 'usuarios', 'stats', 'reportes', 'asistencia', 'ruta'].forEach(x => {
+            const el = document.getElementById('sec-'+x);
+            if(el) el.style.display = 'none';
         });
+        document.getElementById('sec-'+s).style.display = 'block';
+        if(s === 'stats') renderStats();
+    };
+
+    // --- GESTIÓN DE USUARIOS (ADMIN) ---
+    window.crearUsuario = async () => {
+        const mail = document.getElementById('u-email').value.toLowerCase();
+        const nom = document.getElementById('u-nombre').value;
+        if(!mail || !nom) return alert("Completa los datos");
+        
+        DATA.personal[mail] = { nombre: nom, fecha: "", entrada: "", salida: "" };
+        await syncData();
+        renderUserTable();
+        setupUI(); // Actualiza el select de cobradores
+        alert("Usuario agregado al sistema");
+    };
+
+    function renderUserTable() {
+        const tb = document.querySelector('#userTable tbody');
+        if(!tb) return;
+        tb.innerHTML = "";
+        for(let m in DATA.personal) {
+            tb.innerHTML += `<tr><td>${DATA.personal[m].nombre}</td><td>${m}</td></tr>`;
+        }
     }
 
-    window.marcarAsistencia = async (tipo) => {
-        if(!DATA.personal[USER_MAIL]) DATA.personal[USER_MAIL] = {};
-        DATA.personal[USER_MAIL].fecha = new Date().toLocaleDateString();
-        DATA.personal[USER_MAIL][tipo] = new Date().toLocaleTimeString();
-        await syncData();
-        checkAsistencia();
+    // --- PRÉSTAMOS ---
+    window.crearPrestamo = async () => {
+        try {
+            const m = parseFloat(document.getElementById('p-monto').value);
+            const cu = parseInt(document.getElementById('p-cuotas').value);
+            const frec = parseInt(document.getElementById('p-frecuencia').value);
+            const cob = document.getElementById('p-cobrador').value;
+
+            if(!m || !cu || !cob) return alert("Llena todos los campos");
+
+            let planPagos = [];
+            for(let i=1; i<=cu; i++) {
+                let fVence = new Date();
+                fVence.setDate(fVence.getDate() + (i * frec));
+                planPagos.push({ id: i, monto: (m/cu).toFixed(2), pagado: false, vence: fVence.toLocaleDateString() });
+            }
+
+            DATA.cartera.push({
+                id: Date.now(),
+                nombre: document.getElementById('p-nombre').value,
+                monto: m,
+                cobrador: cob,
+                plan: planPagos
+            });
+
+            await syncData();
+            renderMainTable();
+            alert("Préstamo creado con éxito");
+        } catch (e) {
+            console.error(e);
+            alert("Error al crear: " + e.message);
+        }
     };
 
-    // --- FUNCIONES COMUNES ---
-    window.login = async () => { 
-        const email = document.getElementById('auth-email').value;
-        const pass = document.getElementById('auth-pass').value;
-        try { await signInWithEmailAndPassword(auth, email, pass); } catch(e) { alert("Error: Verifica tus credenciales"); } 
-    };
-    window.salir = () => signOut(auth);
-    window.closeModal = () => { document.getElementById('modalCobro').style.display='none'; document.querySelector('.overlay').style.display='none'; };
-
-    // --- RENDERIZADO ADMIN ---
     function renderMainTable() {
-        const tb = document.querySelector('#mainTable tbody'); 
+        const tb = document.querySelector('#mainTable tbody');
         if(!tb) return;
         tb.innerHTML = "";
         DATA.cartera.forEach(p => {
-            tb.innerHTML += `<tr><td>${p.nombre}</td><td>$${p.monto}</td><td>${p.cobrador.split('@')[0]}</td></tr>`;
+            tb.innerHTML += `<tr><td>${p.nombre}</td><td>$${p.monto}</td><td>${p.cobrador}</td></tr>`;
         });
     }
+
+    function renderStats() {
+        document.getElementById('st-capital').innerText = "$" + DATA.cartera.reduce((a,b) => a + b.monto, 0);
+        const hoy = new Date().toLocaleDateString();
+        const totalHoy = DATA.pagos.filter(p => p.fecha === hoy).reduce((a,b) => a + parseFloat(b.monto), 0);
+        document.getElementById('st-hoy').innerText = "$" + totalHoy;
+    }
+
+    window.login = async () => {
+        try { await signInWithEmailAndPassword(auth, document.getElementById('auth-email').value, document.getElementById('auth-pass').value); }
+        catch(e) { alert("Error de acceso"); }
+    };
+    window.salir = () => signOut(auth);
 </script>
 </body>
 </html>
