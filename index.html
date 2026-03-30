@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SmartCredit Pro v9 - Business Intelligence</title>
+    <title>SmartCredit Pro v9 - Control de Acceso</title>
     <style>
         :root {
             --bg: #0d1117; --card: #161b22; --accent: #58a6ff;
@@ -38,8 +38,8 @@
 <div id="login-screen" style="position:fixed; top:0; left:0; width:100%; height:100%; background:var(--bg); z-index:5000; display:flex; justify-content:center; align-items:center;">
     <div class="card" style="width:280px; text-align:center;">
         <h2 style="color:var(--accent)">SmartCredit Pro</h2>
-        <input type="email" id="auth-email" placeholder="Usuario">
-        <input type="password" id="auth-pass" placeholder="Password">
+        <input type="email" id="auth-email" placeholder="Correo Electrónico">
+        <input type="password" id="auth-pass" placeholder="Contraseña">
         <button onclick="login()" class="btn-main" style="margin-top:10px;">ENTRAR</button>
     </div>
 </div>
@@ -58,15 +58,15 @@
 
     <div id="nav-cobrador" class="tabs" style="display:none;">
         <div style="color:var(--accent); font-weight:bold; padding:10px;">PANEL COBRADOR</div>
-        <button onclick="salir()" style="background:var(--danger); width:60px;">SALIR</button>
+        <button onclick="salir()" style="background:var(--danger); width:60px; margin-left:auto;">SALIR</button>
     </div>
 
     <div id="sec-stats" style="display:none;">
         <div class="stat-grid">
             <div class="stat-box"><h4>CAPITAL EN CALLE</h4><p id="st-capital">$0</p></div>
-            <div class="stat-box"><h4>INTERESES POR COBRAR</h4><p id="st-interes">$0</p></div>
+            <div class="stat-box"><h4>INTERESES</h4><p id="st-interes">$0</p></div>
             <div class="stat-box"><h4>COBRADO HOY</h4><p id="st-hoy">$0</p></div>
-            <div class="stat-box"><h4>CLIENTES ACTIVOS</h4><p id="st-clientes">0</p></div>
+            <div class="stat-box"><h4>CLIENTES</h4><p id="st-clientes">0</p></div>
         </div>
     </div>
 
@@ -77,7 +77,7 @@
 
     <div id="sec-asistencia" style="display:none;">
         <div class="card" style="text-align:center;">
-            <h3>Control de Horario</h3>
+            <h3>Control de Asistencia</h3>
             <button onclick="marcarAsistencia('entrada')" id="btn-entrada" class="btn-main" style="height:60px;">MARCAR ENTRADA</button>
             <button onclick="marcarAsistencia('salida')" id="btn-salida" style="display:none; background:var(--danger); height:60px;">CERRAR DÍA</button>
         </div>
@@ -85,51 +85,33 @@
 
     <div id="sec-cobros" style="display:none;">
         <div class="card">
-            <h3>Registrar Préstamo</h3>
+            <h3>Registrar Nuevo Préstamo</h3>
             <input type="text" id="p-nombre" placeholder="Nombre del Cliente">
-            <input type="tel" id="p-tel" placeholder="WhatsApp (Ej: 1829...)">
-            <textarea id="p-dir" placeholder="Dirección / Referencia"></textarea>
-            
-            <div style="display:flex; gap:5px;">
-                <input type="number" id="p-monto" placeholder="Monto Total">
-                <input type="number" id="p-cuotas" placeholder="Cant. Cuotas">
-            </div>
-
+            <input type="tel" id="p-tel" placeholder="WhatsApp">
+            <textarea id="p-dir" placeholder="Dirección"></textarea>
+            <div style="display:flex; gap:5px;"><input type="number" id="p-monto" placeholder="Monto"><input type="number" id="p-cuotas" placeholder="Cuotas"></div>
             <select id="p-frecuencia" style="margin-top:10px;">
-                <option value="1">Cobro Diario</option>
-                <option value="7">Cobro Semanal</option>
-                <option value="15">Cobro Quincenal</option>
-                <option value="30">Cobro Mensual</option>
+                <option value="1">Diario</option><option value="7">Semanal</option><option value="15">Quincenal</option><option value="30">Mensual</option>
             </select>
-
-            <div style="display:flex; gap:5px; margin-top:5px;">
-                <select id="p-mora-tipo" style="width:40%;">
-                    <option value="fijo">Mora Fija ($)</option>
-                    <option value="porcentaje">Mora (%)</option>
-                </select>
-                <input type="number" id="p-mora-valor" placeholder="Valor Mora" style="width:60%;">
-            </div>
-
             <select id="p-cobrador" style="margin-top:10px;"><option value="">Asignar Cobrador...</option></select>
-            <button onclick="crearPrestamo()" class="btn-main" style="margin-top:10px;">REGISTRAR PRESTAMO</button>
+            <button onclick="crearPrestamo()" class="btn-main" style="margin-top:10px;">REGISTRAR</button>
         </div>
         <div class="card"><table id="mainTable"><thead><tr><th>Cliente</th><th>Monto</th><th>Cobrador</th></tr></thead><tbody></tbody></table></div>
     </div>
 
     <div id="sec-personal" style="display:none;">
-        <div class="card"><h3>Liquidación Diaria</h3><table id="workersTable"><thead><tr><th>Cobrador</th><th>Recaudado</th><th>Acción</th></tr></thead><tbody></tbody></table></div>
+        <div class="card"><h3>Liquidación</h3><table id="workersTable"><thead><tr><th>Cobrador</th><th>Recaudado</th><th>Acción</th></tr></thead><tbody></tbody></table></div>
     </div>
 
     <div id="sec-reportes" style="display:none;">
-        <div class="card"><h3>Logs del Sistema</h3><table id="historyTable"><thead><tr><th>Hora</th><th>Cobrador</th><th>Acción</th><th>GPS</th></tr></thead><tbody></tbody></table></div>
+        <div class="card"><h3>Historial Auditoría</h3><table id="historyTable"><thead><tr><th>Hora</th><th>Usuario</th><th>Acción</th><th>GPS</th></tr></thead><tbody></tbody></table></div>
     </div>
 
     <div id="sec-config" style="display:none;">
         <div class="card">
-            <h3>Ajustes Generales</h3>
-            <small>WhatsApp Admin:</small>
-            <input type="tel" id="cfg-wa-admin" placeholder="Ej: 18290000000" onchange="syncData()">
-            <button onclick="syncData()" class="btn-main" style="margin-top:10px;">GUARDAR CONFIGURACIÓN</button>
+            <h3>Configuración Sistema</h3>
+            <input type="tel" id="cfg-wa-admin" placeholder="WhatsApp Admin">
+            <button onclick="syncData()" class="btn-main" style="margin-top:10px;">GUARDAR</button>
         </div>
     </div>
 </div>
@@ -138,8 +120,7 @@
 <div class="modal" id="modalCobro">
     <h3 id="mc-nombre">---</h3>
     <div id="mc-cuotas" style="max-height: 300px; overflow-y: auto;"></div>
-    <button id="btn-no-localizado" onclick="reportarNoEncontrado()" class="btn-warn" style="margin-top:10px; width:100%; padding:10px; border-radius:8px;" disabled>CLIENTE NO ENCONTRADO</button>
-    <button onclick="closeModal()" style="background:var(--danger); margin-top:10px; color:white;">CERRAR VENTANA</button>
+    <button onclick="closeModal()" style="background:var(--danger); margin-top:10px; color:white;">CERRAR</button>
 </div>
 
 <script type="module">
@@ -156,53 +137,22 @@
     let USER_MAIL = "";
     let ES_ADMIN = false;
     let CURRENT_GPS = null;
-    let SOS_ACTIVE = false;
-    let sosInterval = null;
 
-    // --- GPS ---
-    function trackGPS() {
-        const indicator = document.getElementById('gps-indicator');
-        if (navigator.geolocation) {
-            navigator.geolocation.watchPosition((pos) => {
-                CURRENT_GPS = `https://www.google.com/maps?q=${pos.coords.latitude},${pos.coords.longitude}`;
-                indicator.className = "gps-on"; indicator.innerText = "📍 SEÑAL GPS ACTIVA";
-                if(document.getElementById('btn-no-localizado')) document.getElementById('btn-no-localizado').disabled = false;
-            }, () => {
-                CURRENT_GPS = null;
-                indicator.className = "gps-off"; indicator.innerText = "❌ GPS DESACTIVADO";
-            }, { enableHighAccuracy: true });
-        }
-    }
-
-    // --- SOS ---
-    window.toggleSOS = () => {
-        if(!SOS_ACTIVE) {
-            if(!confirm("¿ACTIVAR EMERGENCIA?")) return;
-            SOS_ACTIVE = true;
-            enviarSOS();
-            sosInterval = setInterval(enviarSOS, 30000);
-            document.getElementById('sos-btn').innerText = "⚠️ SOS ACTIVADO";
-        } else {
-            SOS_ACTIVE = false;
-            clearInterval(sosInterval);
-            document.getElementById('sos-btn').innerText = "🚨 BOTÓN DE PÁNICO (SOS)";
-        }
-    };
-
-    function enviarSOS() { notificar(`🚨 *ALERTA SOS* 🚨\nCobrador: ${USER_MAIL}\nGPS: ${CURRENT_GPS}`); }
-
-    // --- CORE ---
+    // --- SEGURIDAD: CONTROL DE ACCESO ---
     onAuthStateChanged(auth, async (user) => {
         if (user) {
-            USER_MAIL = user.email;
-            ES_ADMIN = (USER_MAIL === "izarsalas.1@gmail.com"); 
+            USER_MAIL = user.email.toLowerCase();
+            // Lógica de validación: ¿Empieza con admin?
+            ES_ADMIN = USER_MAIL.startsWith("admin"); 
+            
             await loadData();
             document.getElementById('login-screen').style.display = 'none';
             document.getElementById('app-content').style.display = 'block';
-            if(!ES_ADMIN) { trackGPS(); document.getElementById('gps-indicator').style.display = 'block'; }
+            
             setupUI();
         } else {
             document.getElementById('login-screen').style.display = 'flex';
+            document.getElementById('app-content').style.display = 'none';
         }
     });
 
@@ -219,71 +169,90 @@
 
     function setupUI() {
         if(ES_ADMIN) {
+            // Mostrar menú completo y ocultar el de cobrador
             document.getElementById('nav-admin').style.display = 'flex';
+            document.getElementById('nav-cobrador').style.display = 'none';
+            
+            // Poblar lista de cobradores en el formulario
             const sel = document.getElementById('p-cobrador');
             sel.innerHTML = '<option value="">Asignar Cobrador...</option>';
             for(let m in DATA.personal) sel.innerHTML += `<option value="${m}">${m.split('@')[0]}</option>`;
-            nav('cobros');
+            
+            nav('cobros'); 
         } else {
+            // Ocultar menú admin y mostrar solo panel de cobrador
+            document.getElementById('nav-admin').style.display = 'none';
             document.getElementById('nav-cobrador').style.display = 'flex';
+            document.getElementById('gps-indicator').style.display = 'block';
+            
+            trackGPS();
             checkAsistencia();
         }
     }
 
     window.nav = (s) => {
-        ['cobros', 'personal', 'reportes', 'config', 'asistencia', 'ruta', 'stats'].forEach(x => { if(document.getElementById('sec-'+x)) document.getElementById('sec-'+x).style.display='none'; });
-        document.getElementById('sec-'+s).style.display='block';
-        if(s === 'stats') renderStats();
-        if(s === 'personal') renderPersonal();
-        if(s === 'reportes') renderReportes();
-    };
-
-    function notificar(msg) {
-        const num = DATA.config.waAdmin;
-        if(!num) return;
-        window.open(`https://wa.me/${num.replace(/\D/g,'')}?text=${encodeURIComponent(msg)}`, '_blank');
-    }
-
-    // --- LÓGICA DE NEGOCIO ---
-    window.crearPrestamo = async () => {
-        const m = parseFloat(document.getElementById('p-monto').value);
-        const cu = parseInt(document.getElementById('p-cuotas').value);
-        const frec = parseInt(document.getElementById('p-frecuencia').value);
-        const tipoMora = document.getElementById('p-mora-tipo').value;
-        const valMora = parseFloat(document.getElementById('p-mora-valor').value) || 0;
-
-        let planPagos = [];
-        let hoy = new Date();
-
-        for(let i=1; i<=cu; i++) {
-            let fechaVence = new Date();
-            fechaVence.setDate(hoy.getDate() + (i * frec)); // Calcula fecha según frecuencia
-            planPagos.push({ 
-                id: i, 
-                monto: (m/cu).toFixed(2), 
-                pagado: false, 
-                vence: fechaVence.toLocaleDateString() 
-            });
-        }
-
-        DATA.cartera.push({
-            id: Date.now(), 
-            nombre: document.getElementById('p-nombre').value, 
-            tel: document.getElementById('p-tel').value,
-            dir: document.getElementById('p-dir').value, 
-            monto: m, 
-            cobrador: document.getElementById('p-cobrador').value,
-            frecuencia: frec,
-            moraTipo: tipoMora,
-            moraValor: valMora,
-            plan: planPagos
+        const secciones = ['cobros', 'personal', 'reportes', 'config', 'asistencia', 'ruta', 'stats'];
+        secciones.forEach(x => { 
+            const el = document.getElementById('sec-'+x);
+            if(el) el.style.display = 'none'; 
         });
         
-        await syncData(); 
-        renderMainTable();
-        alert("Préstamo Registrado con éxito");
+        const target = document.getElementById('sec-'+s);
+        if(target) target.style.display = 'block';
     };
 
+    function trackGPS() {
+        if (navigator.geolocation) {
+            navigator.geolocation.watchPosition((pos) => {
+                CURRENT_GPS = `https://www.google.com/maps?q=${pos.coords.latitude},${pos.coords.longitude}`;
+                document.getElementById('gps-indicator').className = "gps-on";
+                document.getElementById('gps-indicator').innerText = "📍 GPS ACTIVO (SISTEMA PROTEGIDO)";
+            }, null, { enableHighAccuracy: true });
+        }
+    }
+
+    // --- LÓGICA COBRADOR ---
+    function checkAsistencia() {
+        const info = DATA.personal[USER_MAIL] || {};
+        if(info.fecha === new Date().toLocaleDateString() && info.entrada && !info.salida) {
+            nav('ruta');
+            renderRuta();
+        } else {
+            nav('asistencia');
+        }
+    }
+
+    function renderRuta() {
+        const cont = document.getElementById('lista-ruta');
+        if(!cont) return;
+        cont.innerHTML = "";
+        DATA.cartera.filter(p => p.cobrador === USER_MAIL).forEach(p => {
+            if(!p.plan.some(c => !c.pagado)) return;
+            cont.innerHTML += `<div class="card" style="display:flex; justify-content:space-between; align-items:center;">
+                <b>${p.nombre}</b>
+                <button onclick="verDetalle(${p.id})" style="width:auto; background:var(--accent); padding:10px;">COBRAR</button>
+            </div>`;
+        });
+    }
+
+    window.marcarAsistencia = async (tipo) => {
+        if(!DATA.personal[USER_MAIL]) DATA.personal[USER_MAIL] = {};
+        DATA.personal[USER_MAIL].fecha = new Date().toLocaleDateString();
+        DATA.personal[USER_MAIL][tipo] = new Date().toLocaleTimeString();
+        await syncData();
+        checkAsistencia();
+    };
+
+    // --- FUNCIONES COMUNES ---
+    window.login = async () => { 
+        const email = document.getElementById('auth-email').value;
+        const pass = document.getElementById('auth-pass').value;
+        try { await signInWithEmailAndPassword(auth, email, pass); } catch(e) { alert("Error: Verifica tus credenciales"); } 
+    };
+    window.salir = () => signOut(auth);
+    window.closeModal = () => { document.getElementById('modalCobro').style.display='none'; document.querySelector('.overlay').style.display='none'; };
+
+    // --- RENDERIZADO ADMIN ---
     function renderMainTable() {
         const tb = document.querySelector('#mainTable tbody'); 
         if(!tb) return;
@@ -292,85 +261,6 @@
             tb.innerHTML += `<tr><td>${p.nombre}</td><td>$${p.monto}</td><td>${p.cobrador.split('@')[0]}</td></tr>`;
         });
     }
-
-    window.verDetalle = (id) => {
-        const p = DATA.cartera.find(x => x.id === id); window.currentP = p;
-        document.getElementById('mc-nombre').innerText = p.nombre;
-        const list = document.getElementById('mc-cuotas'); list.innerHTML = "";
-        
-        p.plan.filter(c => !c.pagado).forEach(c => {
-            let valMora = p.moraTipo === 'fijo' ? (p.moraValor || 0) : (c.monto * ((p.moraValor || 0) / 100));
-            let totalConMora = parseFloat(c.monto) + valMora;
-
-            list.innerHTML += `<div style="display:flex; flex-direction:column; background:#0d1117; margin-bottom:8px; padding:10px; border-radius:8px; border-left: 3px solid var(--warning);">
-                <div style="display:flex; justify-content:space-between; font-size: 0.7rem; opacity: 0.8;">
-                    <span>Vence: ${c.vence}</span>
-                    <span>Cuota #${c.id}</span>
-                </div>
-                <div style="display:flex; justify-content:space-between; margin-top:5px;">
-                    <b style="color:var(--neon)">Total: $${totalConMora.toFixed(2)}</b>
-                    <button onclick="cobrar(${c.id}, ${totalConMora})" style="width:auto; background:var(--neon); color:black; padding:5px 15px; border-radius:5px;">COBRAR</button>
-                </div>
-            </div>`;
-        });
-        document.getElementById('modalCobro').style.display='block'; document.querySelector('.overlay').style.display='block';
-    };
-
-    window.cobrar = async (idCuota, totalPagado) => {
-        if(!CURRENT_GPS && !ES_ADMIN) { alert("GPS Obligatorio"); return; }
-        const p = window.currentP;
-        p.plan.find(c => c.id === idCuota).pagado = true;
-        
-        DATA.pagos.unshift({ 
-            fecha: new Date().toLocaleDateString(), 
-            hora: new Date().toLocaleTimeString(), 
-            cliente: p.nombre, 
-            monto: totalPagado.toFixed(2), 
-            cobrador: USER_MAIL, 
-            tipo: 'PAGO', 
-            gps: CURRENT_GPS || 'ADMIN_OFFICE'
-        });
-        
-        await syncData();
-        notificar(`💰 *COBRO*\nCliente: ${p.nombre}\nMonto: $${totalPagado.toFixed(2)}`);
-        closeModal(); renderRuta();
-    };
-
-    // --- AUXILIARES ---
-    window.login = async () => { 
-        try { await signInWithEmailAndPassword(auth, document.getElementById('auth-email').value, document.getElementById('auth-pass').value); } 
-        catch(e) { alert("Error de Acceso"); } 
-    };
-    window.salir = () => signOut(auth);
-    window.closeModal = () => { document.getElementById('modalCobro').style.display='none'; document.querySelector('.overlay').style.display='none'; };
-    
-    function renderRuta() {
-        const cont = document.getElementById('lista-ruta'); if(!cont) return;
-        cont.innerHTML = "";
-        DATA.cartera.filter(p => p.cobrador === USER_MAIL).forEach(p => {
-            if(!p.plan.some(c => !c.pagado)) return;
-            cont.innerHTML += `<div class="card" style="display:flex; justify-content:space-between; align-items:center;">
-                <div><b>${p.nombre}</b></div>
-                <button onclick="verDetalle(${p.id})" style="width:auto; background:var(--accent); padding:10px;">VER CUOTAS</button>
-            </div>`;
-        });
-    }
-
-    function checkAsistencia() {
-        const hoy = new Date().toLocaleDateString();
-        const info = DATA.personal[USER_MAIL] || {};
-        if(info.fecha === hoy && info.entrada && !info.salida) { nav('ruta'); renderRuta(); }
-        else { nav('asistencia'); }
-    }
-
-    window.marcarAsistencia = async (tipo) => {
-        const hoy = new Date().toLocaleDateString();
-        if(!DATA.personal[USER_MAIL]) DATA.personal[USER_MAIL] = {};
-        DATA.personal[USER_MAIL].fecha = hoy;
-        DATA.personal[USER_MAIL][tipo] = new Date().toLocaleTimeString();
-        await syncData();
-        checkAsistencia();
-    };
 </script>
 </body>
 </html>
