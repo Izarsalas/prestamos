@@ -30,6 +30,7 @@
         .gps-off { background: rgba(248, 81, 73, 0.1); color: var(--danger); border: 1px solid var(--danger); }
         .modal { display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 90%; max-width: 400px; background: var(--card); border: 1px solid var(--accent); z-index: 1000; padding: 20px; border-radius: 15px; }
         .overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 900; }
+        select, input, textarea { width: 100%; padding: 10px; margin-top: 5px; background: #0d1117; border: 1px solid var(--border); color: white; border-radius: 8px; box-sizing: border-box; }
     </style>
 </head>
 <body>
@@ -39,7 +40,7 @@
         <h2 style="color:var(--accent)">SmartCredit Pro</h2>
         <input type="email" id="auth-email" placeholder="Usuario">
         <input type="password" id="auth-pass" placeholder="Password">
-        <button onclick="login()" class="btn-main">ENTRAR</button>
+        <button onclick="login()" class="btn-main" style="margin-top:10px;">ENTRAR</button>
     </div>
 </div>
 
@@ -96,7 +97,14 @@
                 <input type="number" id="p-monto" placeholder="Monto">
                 <input type="number" id="p-cuotas" placeholder="Cuotas">
             </div>
-            <select id="p-cobrador"><option value="">Asignar Cobrador...</option></select>
+            <div style="display:flex; gap:5px; margin-top:5px;">
+                <select id="p-mora-tipo" style="width:40%;">
+                    <option value="fijo">Mora Fija ($)</option>
+                    <option value="porcentaje">Mora (%)</option>
+                </select>
+                <input type="number" id="p-mora-valor" placeholder="Valor Mora" style="width:60%;">
+            </div>
+            <select id="p-cobrador" style="margin-top:10px;"><option value="">Asignar Cobrador...</option></select>
             <button onclick="crearPrestamo()" class="btn-main" style="margin-top:10px;">REGISTRAR</button>
         </div>
         <div class="card"><table id="mainTable"><thead><tr><th>Cliente</th><th>Monto</th><th>Cobrador</th></tr></thead><tbody></tbody></table></div>
@@ -115,7 +123,7 @@
             <h3>Ajustes</h3>
             <small>WhatsApp Admin:</small>
             <input type="tel" id="cfg-wa-admin" placeholder="Ej: 18290000000" onchange="syncData()">
-            <button onclick="syncData()" class="btn-main">GUARDAR</button>
+            <button onclick="syncData()" class="btn-main" style="margin-top:10px;">GUARDAR</button>
         </div>
     </div>
 </div>
@@ -124,8 +132,8 @@
 <div class="modal" id="modalCobro">
     <h3 id="mc-nombre">---</h3>
     <div id="mc-cuotas"></div>
-    <button id="btn-no-localizado" onclick="reportarNoEncontrado()" class="btn-warn" style="margin-top:10px;" disabled>REPORTAR VISITA (GPS OFF)</button>
-    <button onclick="closeModal()" style="background:var(--danger); margin-top:10px;">CERRAR</button>
+    <button id="btn-no-localizado" onclick="reportarNoEncontrado()" class="btn-warn" style="margin-top:10px; width:100%; padding:10px; border-radius:8px;" disabled>REPORTAR VISITA (GPS OFF)</button>
+    <button onclick="closeModal()" style="background:var(--danger); margin-top:10px; color:white;">CERRAR</button>
 </div>
 
 <script type="module">
@@ -204,7 +212,7 @@
     }
 
     async function syncData() {
-        DATA.config.waAdmin = document.getElementById('cfg-wa-admin').value;
+        if(document.getElementById('cfg-wa-admin')) DATA.config.waAdmin = document.getElementById('cfg-wa-admin').value;
         await setDoc(doc(db, "empresa", "global_data"), DATA);
     }
 
@@ -246,7 +254,7 @@
             p.plan.forEach(c => {
                 if(!c.pagado) {
                     capCalle += parseFloat(c.monto);
-                    interesPendiente += (c.monto * 0.1); // Ejemplo 10% interes
+                    interesPendiente += (c.monto * 0.1); 
                 }
             });
         });
@@ -301,22 +309,43 @@
         const p = DATA.cartera.find(x => x.id === id); window.currentP = p;
         document.getElementById('mc-nombre').innerText = p.nombre;
         const list = document.getElementById('mc-cuotas'); list.innerHTML = "";
+        
         p.plan.filter(c => !c.pagado).forEach(c => {
-            list.innerHTML += `<div style="display:flex; justify-content:space-between; padding:10px; background:#0d1117; margin-bottom:5px; border-radius:8px;">
-                <span>Cuota #${c.id} ($${c.monto})</span>
-                <button onclick="cobrar(${c.id})" style="width:auto; background:var(--neon); color:black; padding:5px;">PAGÓ</button>
+            // CALCULO DINAMICO DE MORA
+            let valMora = p.moraTipo === 'fijo' ? (p.moraValor || 0) : (c.monto * ((p.moraValor || 0) / 100));
+            let totalConMora = parseFloat(c.monto) + valMora;
+
+            list.innerHTML += `<div style="display:flex; flex-direction:column; background:#0d1117; margin-bottom:8px; padding:10px; border-radius:8px; border-left: 3px solid var(--warning);">
+                <div style="display:flex; justify-content:space-between;">
+                    <span>Cuota #${c.id} ($${c.monto})</span>
+                    <span style="color:var(--danger)">Mora: $${valMora.toFixed(2)}</span>
+                </div>
+                <div style="display:flex; justify-content:space-between; margin-top:5px; align-items:center;">
+                    <b style="color:var(--neon)">Total: $${totalConMora.toFixed(2)}</b>
+                    <button onclick="cobrar(${c.id}, ${totalConMora})" style="width:auto; background:var(--neon); color:black; padding:5px 15px; border-radius:5px;">PAGÓ</button>
+                </div>
             </div>`;
         });
         document.getElementById('modalCobro').style.display='block'; document.querySelector('.overlay').style.display='block';
     };
 
-    window.cobrar = async (idCuota) => {
+    window.cobrar = async (idCuota, totalPagado) => {
         if(!CURRENT_GPS) { alert("Sin GPS"); return; }
         const p = window.currentP;
         p.plan.find(c => c.id === idCuota).pagado = true;
-        DATA.pagos.unshift({ fecha: new Date().toLocaleDateString(), hora: new Date().toLocaleTimeString(), cliente: p.nombre, monto: p.plan[0].monto, cobrador: USER_MAIL, tipo: 'PAGO', gps: CURRENT_GPS });
+        
+        DATA.pagos.unshift({ 
+            fecha: new Date().toLocaleDateString(), 
+            hora: new Date().toLocaleTimeString(), 
+            cliente: p.nombre, 
+            monto: totalPagado.toFixed(2), 
+            cobrador: USER_MAIL, 
+            tipo: 'PAGO', 
+            gps: CURRENT_GPS 
+        });
+        
         await syncData();
-        notificar(`💰 *COBRO CONFIRMADO*\nCliente: ${p.nombre}\nGPS: ${CURRENT_GPS}`);
+        notificar(`💰 *COBRO CONFIRMADO*\nCliente: ${p.nombre}\nMonto: $${totalPagado.toFixed(2)}\nGPS: ${CURRENT_GPS}`);
         closeModal(); renderRuta();
     };
 
@@ -331,12 +360,25 @@
     window.crearPrestamo = async () => {
         const m = parseFloat(document.getElementById('p-monto').value);
         const cu = parseInt(document.getElementById('p-cuotas').value);
+        const tipoMora = document.getElementById('p-mora-tipo').value;
+        const valMora = parseFloat(document.getElementById('p-mora-valor').value) || 0;
+
         DATA.cartera.push({
-            id: Date.now(), nombre: document.getElementById('p-nombre').value, tel: document.getElementById('p-tel').value,
-            dir: document.getElementById('p-dir').value, monto: m, cobrador: document.getElementById('p-cobrador').value,
+            id: Date.now(), 
+            nombre: document.getElementById('p-nombre').value, 
+            tel: document.getElementById('p-tel').value,
+            dir: document.getElementById('p-dir').value, 
+            monto: m, 
+            cobrador: document.getElementById('p-cobrador').value,
+            moraTipo: tipoMora,
+            moraValor: valMora,
             plan: Array.from({length:cu}, (_,idx) => ({ id: idx+1, monto: (m/cu).toFixed(2), pagado: false }))
         });
-        await syncData(); nav('cobros');
+        await syncData(); 
+        nav('cobros');
+        // Limpiar campos
+        document.getElementById('p-nombre').value = "";
+        document.getElementById('p-monto').value = "";
     };
 
     function renderPersonal() {
@@ -344,7 +386,7 @@
         const hoy = new Date().toLocaleDateString();
         for(let m in DATA.personal) {
             const total = DATA.pagos.filter(p => p.fecha === hoy && p.cobrador === m && p.tipo === 'PAGO').reduce((a,b) => a + parseFloat(b.monto), 0);
-            tb.innerHTML += `<tr><td>${m.split('@')[0]}</td><td>$${total}</td><td><button onclick="liquidar('${m}')">Liquidar</button></td></tr>`;
+            tb.innerHTML += `<tr><td>${m.split('@')[0]}</td><td>$${total.toFixed(2)}</td><td><button onclick="liquidar('${m}')">Liquidar</button></td></tr>`;
         }
     }
 
@@ -357,7 +399,11 @@
         });
     }
 
-    window.login = async () => { try { await signInWithEmailAndPassword(auth, document.getElementById('auth-email').value, document.getElementById('auth-pass').value); } catch(e) { alert("Error"); } };
+    window.login = async () => { 
+        const email = document.getElementById('auth-email').value;
+        const pass = document.getElementById('auth-pass').value;
+        try { await signInWithEmailAndPassword(auth, email, pass); } catch(e) { alert("Error de acceso"); } 
+    };
     window.salir = () => signOut(auth);
     window.closeModal = () => { document.getElementById('modalCobro').style.display='none'; document.querySelector('.overlay').style.display='none'; };
 </script>
